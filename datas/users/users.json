@@ -1,0 +1,7 @@
+{
+  "admin": {
+    "password": "$2b$12$RQAmobwaq1DvEwlAGpLYPuZ8Z8AKDZMmxvtwHDHzrPKovu53k.BCu",
+    "attempts": 0,
+    "lockout_until": 0
+  }
+}

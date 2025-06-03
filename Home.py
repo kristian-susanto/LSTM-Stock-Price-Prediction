@@ -71,7 +71,7 @@ freq = st.sidebar.selectbox(
 model_option = st.sidebar.radio(
     "Metode Pemodelan",
     ["Latih model baru", "Gunakan model dari database"],
-    help="Pemilihan metode `Latih model baru` disarankan untuk prediksi terkini."
+    help="Pemilihan metode `Latih model baru` disarankan untuk prediksi terkini. Default ticker pada metode Gunakan model dari database adalah ticker `HLAG.DE`"
 )
 tune_model = st.sidebar.checkbox(
     "Aktifkan Model Tuning",
@@ -81,31 +81,31 @@ tune_model = st.sidebar.checkbox(
 
 predict_button = st.sidebar.button("Mulai Prediksi")
 
-def save_info_model(model, freq, model_type="baseline", history=None, metadata=None):
+def save_info_model(model, freq, model_type="baseline", ticker=None, history=None, metadata=None):
     os.makedirs("datas/models", exist_ok=True)
     os.makedirs("datas/histories", exist_ok=True)
     os.makedirs("datas/metadatas", exist_ok=True)
 
-    model_name = f"{freq.lower()}_{model_type}.keras"
+    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
     model_path = os.path.join("datas/models", model_name)
     model.save(model_path)
 
     if history is not None and hasattr(history, "history"):
-        history_name = f"{freq.lower()}_{model_type}_history.json"
+        history_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_history.json"
         history_path = os.path.join("datas/histories", history_name)
         with open(history_path, "w") as f:
             json.dump(history.history, f, indent=4)
 
     if metadata is not None:
-        metadata_name = f"{freq.lower()}_{model_type}_params.json"
+        metadata_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
         metadata_path = os.path.join("datas/metadatas", metadata_name)
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=4)
 
-def delete_old_model(freq, model_type="baseline"):
-    model_file = f"datas/models/{freq}_{model_type}.keras"
-    history_file = f"datas/histories/{freq}_{model_type}_history.json"
-    metadata_file = f"datas/metadatas/{freq}_{model_type}_params.json"
+def delete_old_model(freq, ticker, model_type="baseline"):
+    model_file = f"datas/models/{ticker.lower()}_{freq}_{model_type}.keras"
+    history_file = f"datas/histories/{ticker.lower()}_{freq}_{model_type}_history.json"
+    metadata_file = f"datas/metadatas/{ticker.lower()}_{freq}_{model_type}_params.json"
 
     files_deleted = False
     for file in [model_file, history_file, metadata_file]:
@@ -114,14 +114,15 @@ def delete_old_model(freq, model_type="baseline"):
             files_deleted = True
     return files_deleted
 
-def find_model_file(freq, model_type="baseline"):
-    model_name = f"{freq.lower()}_{model_type}.keras"
-    model_path = os.path.join("datas/models", model_name)
+def find_model_file(freq, ticker, model_type="baseline"):
+    assert ticker is not None, "Ticker harus disediakan."
+    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
+    model_path = os.path.join("datas/models/", model_name)
     if os.path.exists(model_path):
         return model_path
     return None
 
-def load_info_model(model_path=None, freq=None, model_type=None, info_type="model"):
+def load_info_model(freq=None, model_type=None, info_type="model", ticker=None, model_path=None):
     if info_type == "model":
         if model_path and os.path.exists(model_path):
             return load_model(model_path)
@@ -130,7 +131,7 @@ def load_info_model(model_path=None, freq=None, model_type=None, info_type="mode
 
     elif info_type == "history":
         if model_path:
-            history_path = model_path.replace("datas/models", "datas/histories").replace(".keras", "_history.json")
+            history_path = model_path.replace("datas/models/", "datas/histories/").replace(".keras", "_history.json")
             if os.path.exists(history_path):
                 with open(history_path, "r") as f:
                     return json.load(f)
@@ -138,7 +139,7 @@ def load_info_model(model_path=None, freq=None, model_type=None, info_type="mode
 
     elif info_type == "metadata":
         if freq and model_type:
-            metadata_path = f"datas/metadatas/{freq.lower()}_{model_type}_params.json"
+            metadata_path = f"datas/metadatas/{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
                     return json.load(f)
@@ -371,14 +372,19 @@ if predict_button:
     st.dataframe(env_df)
 
     st.subheader("1. Business Understanding")
-    st.markdown("""
-        Dalam dunia investasi dan pasar modal, kemampuan untuk memprediksi harga saham secara akurat 
-        sangat penting bagi pengambilan keputusan yang tepat dan strategis. Oleh karena itu, dibutuhkan 
-        metode yang mampu menangkap pola waktu (time series) secara efektif. Long Short-Term Memory (LSTM) 
-        dirancang untuk mengenali pola dalam data berurutan dan memiliki keunggulan dalam mengatasi masalah 
-        long-term dependencies. Dengan menerapkan LSTM, perusahaan atau investor dapat memperoleh prediksi 
-        harga saham yang mendukung perencanaan dan manajemen risiko investasi.
-    """)
+    st.markdown(
+        """
+        <div style='text-align: justify'>
+            Dalam dunia investasi dan pasar modal, kemampuan untuk memprediksi harga saham secara akurat 
+            sangat penting bagi pengambilan keputusan yang tepat dan strategis. Oleh karena itu, dibutuhkan 
+            metode yang mampu menangkap pola waktu (time series) secara efektif. Long Short-Term Memory (LSTM) 
+            dirancang untuk mengenali pola dalam data berurutan dan memiliki keunggulan dalam mengatasi masalah 
+            long-term dependencies. Dengan menerapkan LSTM, perusahaan atau investor dapat memperoleh prediksi 
+            harga saham yang mendukung perencanaan dan manajemen risiko investasi.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.subheader("2. Data Understanding")
     with st.spinner("Mengambil data dari Yahoo Finance..."):
@@ -544,10 +550,10 @@ if predict_button:
 
     st.subheader("4. Modeling")
     if model_option == "Gunakan model dari database":
-        model_path = find_model_file(freq, model_type="baseline")
+        model_path = find_model_file(freq, ticker, model_type="baseline")
         if model_path:
             st.success("Model baseline telah ditemukan.")
-            params = load_info_model(freq=freq, model_type="baseline", info_type="metadata")
+            params = load_info_model(freq=freq, info_type="metadata", ticker=ticker, model_type="baseline")
             if params is None:
                 st.error("Metadata model baseline tidak ditemukan.")
                 st.stop()
@@ -567,7 +573,7 @@ if predict_button:
             X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
             X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 
-            model = load_info_model(model_path=model_path, info_type="model")
+            model = load_info_model(info_type="model", ticker=ticker, model_path=model_path)
             start_time = time.time()
             y_pred = model.predict(X_test)
             duration = time.time() - start_time
@@ -577,7 +583,7 @@ if predict_button:
             epochs = epochs
             batch_size = batch_size
         else:
-            st.error("Model baseline tidak ditemukan di folder `models/`.")
+            st.error("Model baseline tidak ditemukan.")
             st.stop()
     elif model_option == "Latih model baru":
         with st.spinner("Melatih model dan melakukan prediksi..."):
@@ -599,8 +605,8 @@ if predict_button:
     fig, ax = plt.subplots(figsize=(8, 4))
 
     if history is None:
-        model = load_info_model(model_path=model_path, info_type="model")
-        history_dict = load_info_model(model_path=model_path, info_type="history")
+        model = load_info_model(info_type="model", ticker=ticker, model_path=model_path)
+        history_dict = load_info_model(info_type="history", ticker=ticker, model_path=model_path)
         history = type("History", (), {"history": history_dict}) if history_dict else None
 
     if history is not None:
@@ -656,9 +662,9 @@ if predict_button:
                 "duration": duration,
             }
 
-            files_deleted = delete_old_model(freq, model_type="baseline")
+            files_deleted = delete_old_model(freq, ticker, model_type="baseline")
 
-            save_info_model(model, freq, model_type="baseline", history=history, metadata=metadata)
+            save_info_model(model, freq, ticker=ticker, model_type="baseline", history=history, metadata=metadata)
 
             if files_deleted:
                 st.success(f"Model baseline lama berhasil dihapus. Model, histori training, dan metadata parameter baseline yang baru telah berhasil disimpan.")
@@ -698,15 +704,15 @@ if predict_button:
     if tune_model:
         st.markdown("#### 4.5 Model Tuning")
         if model_option == "Gunakan model dari database":
-            model_path = find_model_file(freq, model_type="best tuning")
+            model_path = find_model_file(freq, ticker, model_type="best tuning")
             if model_path:
                 st.success("Model best tuning telah ditemukan.")
-                params = load_info_model(freq=freq, model_type="best tuning", info_type="metadata")
+                params = load_info_model(freq=freq, info_type="metadata", ticker=ticker, model_type="best tuning")
                 if params is None:
                     st.error("Metadata model best tuning tidak ditemukan.")
                     st.stop()
                 else:
-                    best_model = load_info_model(model_path=model_path, info_type="model")
+                    best_model = load_info_model(info_type="model", ticker=ticker, model_path=model_path)
                     time_step = params["time_step"]
                     epochs = params["epochs"]
                     batch_size = params["batch_size"]
@@ -734,7 +740,7 @@ if predict_button:
                 X_train_tune = X_train_tune.reshape(X_train_tune.shape[0], X_train_tune.shape[1], 1)
                 X_test_tune = X_test_tune.reshape(X_test_tune.shape[0], X_test_tune.shape[1], 1)
 
-                best_model = load_info_model(model_path=model_path, info_type="model")
+                best_model = load_info_model(info_type="model", ticker=ticker, model_path=model_path)
                 start_time = time.time()
                 y_pred = best_model.predict(X_test_tune)
                 duration = time.time() - start_time
@@ -768,7 +774,7 @@ if predict_button:
                 best = tuning_results[0]
 
             else:
-                st.error("Tidak ditemukan model yang sesuai di direktori `models/`.")
+                st.error("Model best tuning tidak ditemukan.")
                 st.stop()
         else:
             st.markdown("##### 4.5.1 Hyperparameter Tuning")
@@ -835,8 +841,8 @@ if predict_button:
                 "mape": best["mape"],
                 "duration": best["duration"],
             }
-            files_deleted = delete_old_model(freq, model_type="best tuning")
-            save_info_model(best["model"], freq, model_type="best tuning", history=best["history"], metadata=metadata_best)
+            files_deleted = delete_old_model(freq, ticker, model_type="best tuning")
+            save_info_model(best["model"], freq, ticker=ticker, model_type="best tuning", history=best["history"], metadata=metadata_best)
 
             if files_deleted:
                 st.success(f"Model best tuning lama berhasil dihapus. Model, histori training, dan metadata parameter best tuning yang baru telah berhasil disimpan.")
@@ -869,8 +875,8 @@ if predict_button:
         fig, ax = plt.subplots(figsize=(8, 4))
 
         if best["history"] is None:
-            best_model = load_info_model(model_path=model_path, info_type="model")
-            history_dict = load_info_model(model_path=model_path, info_type="history")
+            best_model = load_info_model(info_type="model", ticker=ticker, model_path=model_path)
+            history_dict = load_info_model(info_type="history", ticker=ticker, model_path=model_path)
             best["history"] = type("History", (), {"history": history_dict}) if history_dict else None
 
         if best["history"] is not None:
