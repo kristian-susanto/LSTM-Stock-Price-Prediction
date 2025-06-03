@@ -2,34 +2,25 @@ import os
 import io
 import time
 import math
-import random
 import platform
 import datetime
-import json
+import psutil
+import matplotlib
+import sklearn
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-import psutil
 import yfinance as yf
-import sklearn
-from pandas.tseries.offsets import BDay
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
-import tensorflow as tf
-from tensorflow.keras import Input
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
+from utils.train_predict import get_frequency_code, get_time_step, create_dataset, build_and_train_model, show_prediction_results, get_future_trading_dates
+from utils.model_utils import save_info_model, find_model_file, load_info_model, delete_old_model
+from utils.viz_utils import dataset_information_summary, generate_lstm_model_config, model_architecture_summary, highlight_rows
 
-st.set_page_config(
-    page_title="Prediksi Harga Saham",
-    page_icon="assets/favicon.ico",
-    layout="wide"
-)
+st.set_page_config(page_title="Prediksi Harga Saham", page_icon="assets/favicon.ico", layout="wide")
 
 st.header("Analisis Prediksi Harga Saham Menggunakan Metode LSTM", divider="gray")
 
@@ -79,247 +70,7 @@ tune_model = st.sidebar.checkbox(
     help="Mengombinasikan parameter model tuning secara otomatis untuk analisis prediksi yang mendalam."
 )
 
-predict_button = st.sidebar.button("Mulai Prediksi")
-
-def save_info_model(model, freq, model_type="baseline", ticker=None, history=None, metadata=None):
-    os.makedirs("datas/models", exist_ok=True)
-    os.makedirs("datas/histories", exist_ok=True)
-    os.makedirs("datas/metadatas", exist_ok=True)
-
-    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
-    model_path = os.path.join("datas/models", model_name)
-    model.save(model_path)
-
-    if history is not None and hasattr(history, "history"):
-        history_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_history.json"
-        history_path = os.path.join("datas/histories", history_name)
-        with open(history_path, "w") as f:
-            json.dump(history.history, f, indent=4)
-
-    if metadata is not None:
-        metadata_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
-        metadata_path = os.path.join("datas/metadatas", metadata_name)
-        with open(metadata_path, "w") as f:
-            json.dump(metadata, f, indent=4)
-
-def delete_old_model(freq, ticker, model_type="baseline"):
-    model_file = f"datas/models/{ticker.lower()}_{freq}_{model_type}.keras"
-    history_file = f"datas/histories/{ticker.lower()}_{freq}_{model_type}_history.json"
-    metadata_file = f"datas/metadatas/{ticker.lower()}_{freq}_{model_type}_params.json"
-
-    files_deleted = False
-    for file in [model_file, history_file, metadata_file]:
-        if os.path.exists(file):
-            os.remove(file)
-            files_deleted = True
-    return files_deleted
-
-def find_model_file(freq, ticker, model_type="baseline"):
-    assert ticker is not None, "Ticker harus disediakan."
-    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
-    model_path = os.path.join("datas/models/", model_name)
-    if os.path.exists(model_path):
-        return model_path
-    return None
-
-def load_info_model(freq=None, model_type=None, info_type="model", ticker=None, model_path=None):
-    if info_type == "model":
-        if model_path and os.path.exists(model_path):
-            return load_model(model_path)
-        else:
-            return None
-
-    elif info_type == "history":
-        if model_path:
-            history_path = model_path.replace("datas/models/", "datas/histories/").replace(".keras", "_history.json")
-            if os.path.exists(history_path):
-                with open(history_path, "r") as f:
-                    return json.load(f)
-        return None
-
-    elif info_type == "metadata":
-        if freq and model_type:
-            metadata_path = f"datas/metadatas/{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
-            if os.path.exists(metadata_path):
-                with open(metadata_path, "r") as f:
-                    return json.load(f)
-        return None
-
-    else:
-        raise ValueError("info_type harus 'model', 'history', atau 'metadata'.")
-
-def get_frequency_code(freq):
-    return {"Harian": "1d", "Mingguan": "1wk", "Bulanan": "1mo"}[freq]
-
-def get_time_step(freq):
-    return {"Harian": 30, "Mingguan": 4, "Bulanan": 12}[freq]
-
-def create_dataset(dataset, time_step=1):
-    X, y = [], []
-    for i in range(len(dataset)-time_step):
-        X.append(dataset[i:(i+time_step), 0])
-        y.append(dataset[i + time_step, 0])
-    return np.array(X), np.array(y)
-
-def build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs=50, batch_size=32):
-    model = Sequential()
-    model.add(Input(shape=(time_step, 1)))
-    model.add(LSTM(50, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(50))
-    model.add(Dropout(0.2))
-    model.add(Dense(1))
-
-    model.compile(optimizer=Adam(learning_rate=0.001), loss="mean_squared_error")
-
-    start_time = time.time()
-
-    early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size, verbose=1, callbacks=[early_stop])
-    duration = time.time() - start_time
-
-    return model, history, duration, epochs, batch_size
-
-def highlight_rows(row, min_rmse):
-    if float(row['RMSE']) == min_rmse:
-        return ['background-color: #c6f6d5' for _ in row]
-    elif row['Tipe Model'] in ['Baseline', 'Baseline (dari Database)']:
-        return ['background-color: #d3e5ff' for _ in row]
-    else:
-        return ['' for _ in row]
-
-def get_future_trading_dates(start_date, n_days):
-    future_dates = []
-    current_date = start_date
-    while len(future_dates) < n_days:
-        current_date += BDay(1)
-        future_dates.append(current_date)
-    return future_dates
-
-def dataset_information_summary(df, dataset_name="Dataset", expanded=True):
-    with st.expander(dataset_name, expanded=expanded):
-        st.dataframe(df)
-        st.write("Ringkasan informasi")
-        non_null_counts = df.notnull().sum()
-        info_table = pd.DataFrame({
-            "Column": df.columns,
-            "Non-Null Count": [f"{count} non-null" for count in non_null_counts],
-            "Dtype": df.dtypes.astype(str).values
-        })
-        st.dataframe(info_table)
-
-        buffer = io.StringIO()
-        df.info(buf=buffer, verbose=False)
-        full_info_str = buffer.getvalue()
-        st.code(full_info_str, language="text")
-
-def generate_lstm_model_config(
-    model, 
-    time_step, 
-    epochs, 
-    batch_size, 
-    duration=None, 
-    title="Model Configuration"
-):
-    lstm_layers = [layer for layer in model.layers if isinstance(layer, LSTM)]
-    dropout_layers = [layer for layer in model.layers if isinstance(layer, Dropout)]
-    output_layer = model.layers[-1]
-
-    config = {
-        "Nama Metode": "LSTM",
-        "Nama Model LSTM": type(model).__name__,
-        "Time Step": time_step,
-        "Jumlah Neuron per LSTM Layer": ", ".join(str(layer.units) for layer in lstm_layers),
-        "Jumlah LSTM Layer": len(lstm_layers),
-        "Learning Rate": round(float(model.optimizer.learning_rate.numpy()), 5),
-        "Epochs": epochs,
-        "Batch Size": batch_size,
-        "Dropout Rate": ", ".join(str(layer.rate) for layer in dropout_layers) if dropout_layers else "0",
-        "Optimizer": type(model.optimizer).__name__,
-        "Loss": model.loss if isinstance(model.loss, str) else model.loss.__name__,
-        "Output Layer": type(output_layer).__name__ + f"({output_layer.units})" if hasattr(output_layer, "units") else str(output_layer)
-    }
-
-    if duration is not None:
-        config["Training Duration (s)"] = round(duration, 2)
-
-    df = pd.DataFrame(list(config.items()), columns=["Parameter", "Nilai"])
-    st.markdown(f"##### {title}")
-    st.dataframe(df)
-
-def model_architecture_summary(model):
-    summary_buffer = io.StringIO()
-    model.summary(print_fn=lambda x: summary_buffer.write(x + "\n"))
-    model_summary_str = summary_buffer.getvalue()
-    st.code(model_summary_str, language="text")
-
-    summary_lines = model_summary_str.strip().split("\n")
-    table_start = next(i for i, line in enumerate(summary_lines) if "Layer (type)" in line)
-    table_end = next(i for i, line in enumerate(summary_lines) if "Total params" in line)
-    table_data = summary_lines[table_start + 2 : table_end - 1]
-
-    parsed_rows = []
-    for row in table_data:
-        clean_row = row.replace("│", "").replace("─", "").replace("└", "").replace("┌", "").replace("┐", "").replace("┘", "")
-        parts = [part.strip() for part in clean_row.strip().split("  ") if part.strip()]
-        
-        if len(parts) >= 3:
-            layer_type = parts[0]
-            output_shape = parts[1]
-            param_count = parts[2]
-            parsed_rows.append((layer_type, output_shape, param_count))
-    
-    df_model_summary = pd.DataFrame(parsed_rows, columns=["Layer (type)", "Output Shape", "Param #"])
-    st.dataframe(df_model_summary, use_container_width=True)
-
-def show_prediction_results(
-    y_true_rescaled,
-    y_pred_rescaled,
-    plot_dates,
-    title="Hasil Prediksi",
-    show_table=True
-):
-    df_result = pd.DataFrame({
-        "Sebenarnya": y_true_rescaled.flatten(),
-        "Prediksi": y_pred_rescaled.flatten(),
-        "Galat": y_true_rescaled.flatten() - y_pred_rescaled.flatten(),
-    })
-    df_result["Galat (%)"] = np.where(
-        df_result["Sebenarnya"] == 0, 0,
-        df_result["Galat"] / df_result["Sebenarnya"] * 100
-    )
-    df_result["Tanggal"] = plot_dates.reset_index(drop=True)
-
-    cols = ["Tanggal"] + [col for col in df_result.columns if col != "Tanggal"]
-    df_result = df_result[cols]
-
-    if show_table:
-        st.write(df_result.head())
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(df_result["Tanggal"], df_result["Sebenarnya"], label="Sebenarnya")
-    ax.plot(df_result["Tanggal"], df_result["Prediksi"], label="Prediksi")
-    ax.set_title(title)
-    ax.set_xlabel("Tanggal")
-    ax.set_ylabel("Harga")
-    ax.legend()
-    ax.grid(True)
-    fig.autofmt_xdate()
-    st.pyplot(fig)
-
-    fig, ax = plt.subplots()
-    sns.histplot(df_result["Galat"], bins=30, kde=True, ax=ax)
-    ax.set_title("Distribusi Galat")
-    ax.set_xlabel("Galat")
-    ax.set_ylabel("Jumlah")
-    st.pyplot(fig)
-
-    rmse = math.sqrt(mean_squared_error(df_result["Sebenarnya"], df_result["Prediksi"]))
-    mape = mean_absolute_percentage_error(df_result["Sebenarnya"], df_result["Prediksi"])
-
-    return df_result, rmse, mape
-
-if predict_button:
+if st.sidebar.button("Mulai Prediksi"):
     st.subheader("0. System and Library Information")
     st.markdown("#### 0.1 Sistem")
     device_name = "GPU" if tf.config.list_physical_devices('GPU') else "CPU"
@@ -354,7 +105,6 @@ if predict_button:
         "Komponen": components,
         "Informasi": info_values
     }
-
     st.dataframe(pd.DataFrame(system_info))
 
     st.markdown("#### 0.2 Library")
@@ -663,7 +413,6 @@ if predict_button:
             }
 
             files_deleted = delete_old_model(freq, ticker, model_type="baseline")
-
             save_info_model(model, freq, ticker=ticker, model_type="baseline", history=history, metadata=metadata)
 
             if files_deleted:
@@ -770,7 +519,6 @@ if predict_button:
                     "duration": duration,
                     "tipe": "Tuning (dari Database)"
                 })
-
                 best = tuning_results[0]
 
             else:
@@ -999,8 +747,7 @@ if predict_button:
         progress_bar.progress((i + 1) / n_future)
 
     start_date = df["Date"].max()
-    future_dates = get_future_trading_dates(start_date, n_future)
-
+    future_dates = get_future_trading_dates(start_date, n_future, freq=freq)
     future_prices = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
 
     df_future = pd.DataFrame({"Tanggal": future_dates, "Harga yang Diprediksi": future_prices.flatten()})

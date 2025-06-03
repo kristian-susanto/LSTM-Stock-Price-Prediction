@@ -12,6 +12,73 @@ def init_model_dirs():
     os.makedirs(HISTORY_DIR, exist_ok=True)
     os.makedirs(METADATA_DIR, exist_ok=True)
 
+def save_info_model(model, freq, model_type="baseline", ticker=None, history=None, metadata=None):
+    os.makedirs("datas/models", exist_ok=True)
+    os.makedirs("datas/histories", exist_ok=True)
+    os.makedirs("datas/metadatas", exist_ok=True)
+
+    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
+    model_path = os.path.join("datas/models", model_name)
+    model.save(model_path)
+
+    if history is not None and hasattr(history, "history"):
+        history_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_history.json"
+        history_path = os.path.join("datas/histories", history_name)
+        with open(history_path, "w") as f:
+            json.dump(history.history, f, indent=4)
+
+    if metadata is not None:
+        metadata_name = f"{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
+        metadata_path = os.path.join("datas/metadatas", metadata_name)
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=4)
+
+def find_model_file(freq, ticker, model_type="baseline"):
+    assert ticker is not None, "Ticker harus disediakan."
+    model_name = f"{ticker.lower()}_{freq.lower()}_{model_type}.keras"
+    model_path = os.path.join("datas/models/", model_name)
+    if os.path.exists(model_path):
+        return model_path
+    return None
+
+def load_info_model(freq=None, model_type=None, info_type="model", ticker=None, model_path=None):
+    if info_type == "model":
+        if model_path and os.path.exists(model_path):
+            return load_model(model_path)
+        else:
+            return None
+
+    elif info_type == "history":
+        if model_path:
+            history_path = model_path.replace("datas/models/", "datas/histories/").replace(".keras", "_history.json")
+            if os.path.exists(history_path):
+                with open(history_path, "r") as f:
+                    return json.load(f)
+        return None
+
+    elif info_type == "metadata":
+        if freq and model_type:
+            metadata_path = f"datas/metadatas/{ticker.lower()}_{freq.lower()}_{model_type}_params.json"
+            if os.path.exists(metadata_path):
+                with open(metadata_path, "r") as f:
+                    return json.load(f)
+        return None
+
+    else:
+        raise ValueError("info_type harus 'model', 'history', atau 'metadata'.")
+
+def delete_old_model(freq, ticker, model_type="baseline"):
+    model_file = f"datas/models/{ticker.lower()}_{freq}_{model_type}.keras"
+    history_file = f"datas/histories/{ticker.lower()}_{freq}_{model_type}_history.json"
+    metadata_file = f"datas/metadatas/{ticker.lower()}_{freq}_{model_type}_params.json"
+
+    files_deleted = False
+    for file in [model_file, history_file, metadata_file]:
+        if os.path.exists(file):
+            os.remove(file)
+            files_deleted = True
+    return files_deleted
+    
 def list_models():
     return [f for f in os.listdir(MODEL_DIR) if f.endswith(".keras")]
     

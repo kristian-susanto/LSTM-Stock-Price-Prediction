@@ -8,11 +8,7 @@ from utils.model_utils import list_models, load_model_file, get_model_info, dele
 from utils.model_utils import list_histories, load_history_file, get_history_info, delete_history
 from utils.model_utils import list_metadatas, load_param_file, get_param_info, delete_metadata
 
-st.set_page_config(
-    page_title="Panel Admin",
-    page_icon="assets/favicon.ico",
-    layout="wide"
-)
+st.set_page_config(page_title="Panel Admin", page_icon="assets/favicon.ico", layout="wide")
 
 init_model_dirs() 
 

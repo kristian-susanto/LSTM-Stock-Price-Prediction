@@ -2,11 +2,7 @@ import time
 import streamlit as st
 from utils.auth import authenticate
 
-st.set_page_config(
-    page_title="Masuk",
-    page_icon="assets/favicon.ico",
-    layout="wide"
-)
+st.set_page_config(page_title="Masuk", page_icon="assets/favicon.ico", layout="wide")
 
 st.header("Login", divider="gray")
 

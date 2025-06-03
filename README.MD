@@ -26,7 +26,9 @@ LSTM-Stock-Price-Prediction/
 │
 ├── utils/
 │   ├── auth.py
-│   └── model_utils.py
+│   ├── model_utils.py
+│   ├── train_predict.py
+│   └── viz_utils.py
 │
 ├── .gitignore
 ├── Home.py

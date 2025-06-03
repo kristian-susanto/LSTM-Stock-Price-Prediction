@@ -2,11 +2,7 @@ import re
 import streamlit as st
 from utils.auth import init_files, register_user, is_registration_enabled
 
-st.set_page_config(
-    page_title="Registrasi",
-    page_icon="assets/favicon.ico",
-    layout="wide"
-)
+st.set_page_config(page_title="Registrasi", page_icon="assets/favicon.ico", layout="wide")
 
 init_files()
 
