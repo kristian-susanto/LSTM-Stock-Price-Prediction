@@ -377,7 +377,8 @@ if st.sidebar.button("Mulai Prediksi"):
     y_pred_rescaled = scaler.inverse_transform(y_pred)
     y_test_rescaled = scaler.inverse_transform(y_test.reshape(-1, 1))
 
-    st.markdown("#### 4.3 Prediction Results")
+    st.markdown("#### 4.3 Model Inference")
+    st.markdown("##### 4.3.1 Prediction Results")
     plot_dates_test = df["Date"].iloc[time_step + len(y_train):]
 
     df_result, rmse, mape = show_prediction_results(
@@ -421,7 +422,7 @@ if st.sidebar.button("Mulai Prediksi"):
                 st.success(f"Model, histori training, dan metadata parameter baseline telah berhasil disimpan.")
 
     if tune_model:
-        st.markdown("#### 4.4 Model Results")
+        st.markdown("##### 4.3.2 Model Results")
         st.write("Hasil model baseline.")
     else:
         st.subheader("5. Evaluation")
@@ -451,7 +452,7 @@ if st.sidebar.button("Mulai Prediksi"):
     st.dataframe(baseline_table)
 
     if tune_model:
-        st.markdown("#### 4.5 Model Tuning")
+        st.markdown("#### 4.4 Model Tuning")
         if model_option == "Gunakan model dari database":
             model_path = find_model_file(freq, ticker, model_type="best tuning")
             if model_path:
@@ -525,7 +526,7 @@ if st.sidebar.button("Mulai Prediksi"):
                 st.error("Model best tuning tidak ditemukan.")
                 st.stop()
         else:
-            st.markdown("##### 4.5.1 Hyperparameter Tuning")
+            st.markdown("##### 4.4.1 Hyperparameter Tuning")
 
             if freq == "Harian":
                 time_steps = [30, 60, 90]
@@ -599,7 +600,7 @@ if st.sidebar.button("Mulai Prediksi"):
 
         st.success(f"Model terbaik menggunakan parameter time step = {best['time_step']}, epoch = {best['epochs']}, dan batch size = {best['batch_size']} dengan metrik evaluasi RMSE sebesar {best['rmse']:.4f} dan MAPE sebesar {best['mape']:.2%}")
 
-        st.markdown("#### 4.6 Best Model Selection")
+        st.markdown("#### 4.5 Best Model Selection")
         best_model = best["model"]
         best_history = best["history"]
         best_time_step = best["time_step"]
@@ -613,13 +614,13 @@ if st.sidebar.button("Mulai Prediksi"):
             epochs=best["epochs"],
             batch_size=best["batch_size"],
             duration=best["duration"],
-            title="4.6.1 Best Model Configuration"
+            title="4.5.1 Best Model Configuration"
         )
 
-        st.markdown("##### 4.6.2 Best Model Architecture Summary")
+        st.markdown("##### 4.5.2 Best Model Architecture Summary")
         model_architecture_summary(best_model)
 
-        st.markdown("#### 4.7 Best Model Training")
+        st.markdown("#### 4.6 Best Model Training")
         fig, ax = plt.subplots(figsize=(8, 4))
 
         if best["history"] is None:
@@ -641,7 +642,8 @@ if st.sidebar.button("Mulai Prediksi"):
         ax.legend()
         st.pyplot(fig)
 
-        st.markdown("#### 4.8 Best Model Prediction Results")
+        st.markdown("#### 4.7 Best Model Inference")
+        st.markdown("##### 4.7.1 Best Model Prediction Results")
         X, y = create_dataset(data_scaled, best["time_step"])
         split = int(len(X) * 0.8)
         X_train_best_model, X_test_best_model = X[:split], X[split:]
@@ -663,7 +665,7 @@ if st.sidebar.button("Mulai Prediksi"):
             title="Hasil Prediksi Model Terbaik"
         )
 
-        st.markdown("#### 4.9 Best Model Results")
+        st.markdown("##### 4.7.2 Best Model Results")
         st.write("Hasil model tuning.")
         best_tuning_table = pd.DataFrame([{
             "Tipe Model": "Tuning terbaik",

@@ -19,6 +19,12 @@ LSTM-Stock-Price-Prediction/
 ├── assets/
 │   └── favicon.ico
 │
+├── datas/
+│   ├── histories/
+│   ├── metadatas/
+│   ├── models/
+│   └── users/
+│
 ├── pages/
 │   ├── 01_Login.py
 │   ├── 02_Register.py
