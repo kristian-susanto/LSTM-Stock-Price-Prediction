@@ -26,7 +26,7 @@ def list_model():
     return [doc["name"] for doc in models_col.find()]
 
 def save_model_file(model_name, model, username, role):
-     """Menyimpan model ke database dalam bentuk base64 dengan metadata pengguna."""
+    """Menyimpan model ke database dalam bentuk base64 dengan metadata pengguna."""
     models_col = get_model_collection()
 
     fd, path = tempfile.mkstemp(suffix=".keras")
