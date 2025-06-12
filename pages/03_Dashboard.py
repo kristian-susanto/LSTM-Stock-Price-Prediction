@@ -197,7 +197,7 @@ if get_user_role(st.session_state.username) == "admin":
             selected_role = st.selectbox("Peran Akun", ["Pilih", "user", "admin"], key="selected_role")
             submit_add_user = st.form_submit_button("Tambah")
 
-            # Validasi dan tambah pengguna
+            # Validasi dan tambah akun
             if submit_add_user:
                 users_col = get_users_collection()
                 if users_col.find_one({"username": new_username}):
@@ -217,7 +217,7 @@ if get_user_role(st.session_state.username) == "admin":
                         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     }
                     users_col.insert_one(user_doc)
-                    st.success(f"Pengguna '{new_username}' berhasil ditambahkan dengan password default.")
+                    st.success(f"Akun '{new_username}' berhasil ditambahkan dengan password default.")
                     st.rerun()
 
     st.divider()
@@ -230,7 +230,7 @@ if get_user_role(st.session_state.username) == "admin":
         """,
         unsafe_allow_html=True
     )
-    st.markdown("#### 1. Reset Kata Sandi, Menghapus Akun Langsung, dan Mengubah Peran Pengguna")
+    st.markdown("#### 1. Reset Kata Sandi, Menghapus Akun Langsung, dan Mengubah Peran Akun")
 
     # Tampilkan semua pengguna
     users_col = get_users_collection()
@@ -242,14 +242,14 @@ if get_user_role(st.session_state.username) == "admin":
         for username in usernames:
             user_info = users.get(username, {})
             user_data.append({
-                "Nama Pengguna": username,
+                "Nama Akun": username,
                 "Peran": user_info.get("role", "-"),
                 "Tanggal Buat": user_info.get("created_at", "-"),
                 "Terkunci Sampai": datetime.fromtimestamp(user_info.get("lockout_until", 0)).strftime("%Y-%m-%d %H:%M:%S") if user_info.get("lockout_until", 0) > 0 else "-"
             })
 
         df_users = pd.DataFrame(user_data)
-        st.dataframe(df_users[["Nama Pengguna", "Peran", "Tanggal Buat", "Terkunci Sampai"]], use_container_width=True)
+        st.dataframe(df_users[["Nama Akun", "Peran", "Tanggal Buat", "Terkunci Sampai"]], use_container_width=True)
 
         selected_user = st.selectbox("Pilih Pengguna", usernames)
 
