@@ -75,7 +75,7 @@ if model_option == "Gunakan model dari database":
             can_start_prediction = False
         
         if tune_model and not model_best_tuning_exists:
-            st.sidebar.warning(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` tidak ditemukan di database.")
+            st.sidebar.warning(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` tidak ditemukan di database. Salah satu cara untuk melanjutkan adalah menonaktifkan fitur model tuning.")
             can_start_prediction = False
 
         if not model_baseline_exists and (not tune_model or not model_best_tuning_exists):
