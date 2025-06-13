@@ -5,7 +5,7 @@ import streamlit as st
 from datetime import datetime
 from utils.auth import hash_password, get_user_role, reset_password, get_pending_password_reset_requests, resolve_password_reset_request, delete_user, get_pending_delete_requests, resolve_delete_request, is_registration_enabled, toggle_registration, show_auth_sidebar
 from utils.db import get_users_collection
-from utils.model import list_model, load_model_file, get_model_file, delete_model_file, list_model_metadata, get_model_metadata_file, load_model_metadata_file, delete_model_metadata_file
+from utils.model import list_model, load_model_file, get_model_file, delete_model_file, list_model_metadata, get_model_metadata_file, load_model_metadata_file, delete_model_metadata_file, extract_model_info
 
 # Konfigurasi tampilan halaman
 st.set_page_config(page_title="Dashboard", page_icon="assets/favicon.ico", layout="wide")
@@ -46,19 +46,42 @@ if models:
     model_data = []
     for model_name in models:
         info = get_model_file(model_name)
+        extracted_info = extract_model_info(model_name)
         model_data.append({
             "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
             "Nama Model": model_name,
+            "Ticker Saham": extracted_info["ticker"],
+            "Frekuensi": extracted_info["frekuensi"],
+            "Tanggal Awal": extracted_info["tanggal_awal"],
+            "Tanggal Akhir": extracted_info["tanggal_akhir"],
+            "Tipe Model": extracted_info["tipe_model"],
             "Nama Akun": info.get("username", "-"),
-            "Peran": info.get("role", "-")
+            "Peran": info.get("role", "guest")
         })
 
     df_models = pd.DataFrame(model_data)
 
+    # Melakukan pencarian ticker
+    search_ticker_in_model = st.text_input("Cari Ticker Saham", "")
+
+    # Filter DataFrame jika ada masukan pencarian
+    if search_ticker_in_model:
+        df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker_in_model, case=False)]
+    
     if st.session_state.logged_in:
-        st.dataframe(df_models[["Tanggal Pembuatan", "Nama Model", "Nama Akun", "Peran"]], use_container_width=True)
+        st.dataframe(
+            df_models[
+                ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+            ],
+            use_container_width=True
+        )
     else:
-        st.dataframe(df_models[["Nama Model"]], use_container_width=True)
+        st.dataframe(
+            df_models[
+                ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+            ],
+            use_container_width=True
+        )
 
     # Pilih model untuk dibuka atau dihapus
     selected_model = st.selectbox("Pilih Model", models)
@@ -124,6 +147,13 @@ if all_metadata:
         })
 
     df_all_metadata = pd.DataFrame(metadata_table_data)
+
+    # Melakukan pencarian ticker
+    search_ticker_in_model_metadata = st.text_input("Cari Ticker", "")
+
+    # Filter DataFrame jika ada masukan pencarian
+    if search_ticker_in_model_metadata:
+        df_all_metadata = df_all_metadata[df_all_metadata["Ticker Saham"].str.contains(search_ticker_in_model_metadata, case=False)]
 
     if st.session_state.logged_in:
         st.dataframe(df_all_metadata[["Tanggal Pembuatan", "Nama Data", "Nama Akun", "Peran"]], use_container_width=True)

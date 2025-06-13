@@ -15,7 +15,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import parse_date, get_frequency_code, get_time_step, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_trading_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results
+from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_frequency_code, get_time_step, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_trading_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
@@ -34,7 +34,7 @@ np.random.seed(SEED)
 tf.random.set_seed(SEED)
 
 # Callback EarlyStopping
-early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
 # Sidebar dengan input parameter dari pengguna
 st.sidebar.header("Pengaturan Model")
@@ -42,7 +42,7 @@ ticker = st.sidebar.text_input("Masukkan Ticker Saham", "HLAG.DE", help="Ticker 
 start_date_str = st.sidebar.text_input("Tanggal Awal", value="2000/01/01", help="Format tanggal: YYYY/MM/DD atau YYYY-MM-DD.")
 end_date_str = st.sidebar.text_input("Tanggal Akhir", value=date.today().strftime("%Y/%m/%d"), help="Format tanggal: YYYY/MM/DD atau YYYY-MM-DD.")
 freq = st.sidebar.selectbox("Frekuensi Data", options=["Harian", "Mingguan", "Bulanan"], help="Frekuensi data merupakan frekuensi pengambilan data harga saham.")
-model_option = st.sidebar.radio("Metode Pemodelan", ["Latih model baru", "Gunakan model dari database"], help="Pemilihan metode `Latih model baru` disarankan untuk prediksi terkini.")
+model_option = st.sidebar.radio("Metode Pemodelan", ["Latih model baru", "Gunakan model dari database"], help="Pemilihan metode `Latih model baru` disarankan untuk prediksi terkini. Referensi untuk pilihan `Gunakan model dari database` dapat dilihat pada tabel di layar.")
 tune_model = st.sidebar.checkbox("Aktifkan Model Tuning", value=True, help="Mengombinasikan parameter model tuning secara otomatis untuk analisis prediksi yang mendalam.")
 
 # Memuat dari database jika model tersedia
@@ -99,7 +99,7 @@ if start_button_pressed:
     st.subheader("1. Business Understanding")
     st.markdown(
         """
-        <div style='text-align: justify'>
+        <div style='text-align: justify; margin-bottom: 10px'>
             Dalam dunia investasi dan pasar modal, kemampuan untuk memprediksi harga saham secara akurat 
             sangat penting bagi pengambilan keputusan yang tepat dan strategis. Oleh karena itu, dibutuhkan 
             metode yang mampu menangkap pola waktu (time series) secara efektif. Long Short-Term Memory (LSTM) 
@@ -272,6 +272,7 @@ if start_button_pressed:
     ax.set_ylabel("Jumlah Data", fontsize=12)
     ax.set_title("Distribusi Jumlah Data per Tahun", fontsize=14)
     ax.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.tick_params(axis='x', labelrotation=45)
     st.pyplot(fig)
 
     st.markdown("##### 3.4.2 Menampilkan grafik harga saham dari waktu ke waktu.")
@@ -619,24 +620,27 @@ if start_button_pressed:
         # Melakukan tuning dengan kombinasi hyperparameter jika model tuning belum tersedia
         if model_option == "Latih model baru" or (model_option == "Gunakan model dari database" and model_best_tuning_loaded is None):
             if freq == "Harian":
-                time_steps = [30, 60, 90]
+                time_steps_list = [10, 20, 60]
+                epochs_list = [50, 75, 100]
+                batch_sizes_list = [32, 64]
             elif freq == "Mingguan":
-                time_steps = [4, 8, 12]
+                time_steps_list = [4, 8, 24]
+                epochs_list = [75, 100, 125]
+                batch_sizes_list = [8, 16]
             else:
-                time_steps = [12, 24, 36]
-
-            epochs_list_tuning = [50, 75, 100]
-            batch_sizes_tuning = [16, 32]
-
+                time_steps_list = [2, 4, 12]
+                epochs_list = [100, 125, 150]
+                batch_sizes_list = [4, 8]
+            
             baseline_time_step = time_step
             baseline_epochs = epochs
             baseline_batch_size = batch_size
 
             tuning_combinations = []
             
-            for ts in time_steps:
-                for ep in epochs_list_tuning:
-                    for bs in batch_sizes_tuning:
+            for ts in time_steps_list:
+                for ep in epochs_list:
+                    for bs in batch_sizes_list:
                         if not (ts == baseline_time_step and ep == baseline_epochs and bs == baseline_batch_size):
                             tuning_combinations.append((ts, ep, bs))
 
@@ -904,6 +908,65 @@ if start_button_pressed:
 # Menampilkan info apabila belum bisa memulai prediksi
 else:
     if not can_start_prediction and model_option == "Gunakan model dari database":
-        st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih 'Latih model baru'.")
+        st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
     else:
         st.info("Silakan isi parameter di sidebar, lalu tekan 'Mulai Prediksi'")
+
+        st.markdown(
+            f"""
+            <div style='text-align: justify; margin-bottom: 10px'>
+                Tabel di bawah ini menampilkan daftar model yang telah diunggah atau disimpan oleh pengguna
+                yang dapat digunakan pada pemilihan metode pemodelan "Gunakan model dari database" saat 
+                pengaturan model. Setiap model memiliki informasi seperti nama model, tanggal dibuat, pengguna 
+                yang mengunggah, dan peran pengguna tersebut.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Ambil daftar model yang tersedia
+        models = list_model()
+
+        if models:
+            # Tampilkan model ke dalam DataFrame
+            model_data = []
+            for model_name in models:
+                info = get_model_file(model_name)
+                extracted_info = extract_model_info(model_name)
+                model_data.append({
+                    "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
+                    "Nama Model": model_name,
+                    "Ticker Saham": extracted_info["ticker"],
+                    "Frekuensi": extracted_info["frekuensi"],
+                    "Tanggal Awal": extracted_info["tanggal_awal"],
+                    "Tanggal Akhir": extracted_info["tanggal_akhir"],
+                    "Tipe Model": extracted_info["tipe_model"],
+                    "Nama Akun": info.get("username", "-"),
+                    "Peran": info.get("role", "guest")
+                })
+
+            df_models = pd.DataFrame(model_data)
+
+            # Melakukan pencarian ticker
+            search_ticker = st.text_input("Cari Ticker Saham", "")
+
+            # Filter DataFrame jika ada masukan pencarian
+            if search_ticker:
+                df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker, case=False)]
+
+            if st.session_state.logged_in:
+                st.dataframe(
+                    df_models[
+                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+                    ],
+                    use_container_width=True
+                )
+            else:
+                st.dataframe(
+                    df_models[
+                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+                    ],
+                    use_container_width=True
+                )
+        else:
+            st.info("Belum ada model yang disimpan.")

@@ -33,8 +33,8 @@ username = st.text_input("Nama Akun")
 password = st.text_input("Kata Sandi", type="password")
 confirm = st.text_input("Konfirmasi Kata Sandi", type="password")
 
-# Aturan validasi password: panjang 3-20 karakter, hanya huruf, angka, atau underscore
-password_pattern = r"^[a-zA-Z0-9_]{3,20}$"
+# Aturan validasi password: panjang 3-20 karakter, hanya huruf kecil, angka, atau underscore
+password_pattern = r"^[a-z0-9_]{3,20}$"
 
 # Input opsional untuk kode admin jika akan mendaftar sebagai admin
 admin_code = st.text_input("Kode Admin (Opsional)", type="password")
@@ -46,7 +46,7 @@ if st.button("Daftar"):
         st.error("Kata sandi tidak cocok.")
     # Validasi format kata sandi
     elif not re.match(password_pattern, password):
-        st.error("Kata sandi harus terdiri dari 3 hingga 20 karakter, dan hanya boleh mengandung huruf (a-z atau A-Z), angka (0-9), dan garis bawah (_). Spasi dan karakter khusus lainnya tidak diperbolehkan.")
+        st.error("Kata sandi harus terdiri dari 3 hingga 20 karakter, dan hanya boleh mengandung huruf kecil (a-z), angka (0-9), dan garis bawah (_). Spasi dan karakter khusus lainnya tidak diperbolehkan.")
     # Proses pendaftaran jika valid
     elif register_user(username, password, admin_code=admin_code):
         st.success("Pendaftaran berhasil! Mengarahkan ke halaman login...")
