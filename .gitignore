@@ -1,3 +1,4 @@
+.devcontainer
 utils/__pycache__
 venv
 .env
