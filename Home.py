@@ -104,7 +104,7 @@ if start_button_pressed:
             sangat penting bagi pengambilan keputusan yang tepat dan strategis. Oleh karena itu, dibutuhkan 
             metode yang mampu menangkap pola waktu (time series) secara efektif. Long Short-Term Memory (LSTM) 
             dirancang untuk mengenali pola dalam data berurutan dan memiliki keunggulan dalam mengatasi masalah 
-            long-term dependencies. Dengan menerapkan LSTM, perusahaan atau investor dapat memperoleh prediksi 
+            long-term dependencies. Dengan menerapkan LSTM, perusahaan atau investor dapat memeroleh prediksi 
             harga saham yang mendukung perencanaan dan manajemen risiko investasi.
         </div>
         """,
@@ -204,7 +204,7 @@ if start_button_pressed:
     st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Pada tahap ini, data diperiksa dan dibersihkan dari masalah yang bisa mengganggu proses pelatihan model.</div>""", unsafe_allow_html=True)
 
     st.markdown("##### 3.3.1 Missing Values")
-    st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Jika ada tanggal tertentu tanpa data harga saham, data tersebut akan dihapus atau diisi agar tidak mempengaruhi hasil model.</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Jika ada tanggal tertentu tanpa data harga saham, data tersebut akan dihapus atau diisi agar tidak memengaruhi hasil model.</div>""", unsafe_allow_html=True)
     with st.expander("Memeriksa dan menangani nilai yang hilang pada feature Close."):
         missing_before = df[["Close"]].isnull().sum()
 
@@ -229,7 +229,7 @@ if start_button_pressed:
         st.write(missing_table)
     
     st.markdown("##### 3.3.2 Negative Values")
-    st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Melihat nilai data yang negatif dan tidak mempengaruhi hasil model.</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Melihat nilai data yang negatif dan tidak memengaruhi hasil model.</div>""", unsafe_allow_html=True)
     # Periksa apakah ada nilai negatif
     with st.expander("Memeriksa nilai yang negatif pada feature Close."):
         negative_table = pd.DataFrame({
@@ -910,7 +910,7 @@ else:
     if not can_start_prediction and model_option == "Gunakan model dari database":
         st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
     else:
-        st.info("Silakan isi parameter di sidebar, lalu tekan 'Mulai Prediksi'")
+        st.info("Silakan isi parameter di sidebar, lalu tekan 'Mulai Prediksi'.")
 
         st.markdown(
             f"""

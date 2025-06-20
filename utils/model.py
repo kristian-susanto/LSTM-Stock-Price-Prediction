@@ -350,6 +350,7 @@ def show_prediction_results(y_true_rescaled, y_pred_rescaled, plot_dates, title=
     return df_result, rmse, mape
 
 def extract_model_info(model_name):
+    """Mengekstrak informasi ticker, frekuensi, tanggal, dan tipe model dari nama model."""
     # Pola regex: Ticker_Frekuensi_Tanggal Awal_Tanggal Akhir_Tipe Model
     pattern = r"^(?P<ticker>[^_]+)_(?P<frekuensi>[^_]+)_(?P<tanggal_awal>\d{4}-\d{2}-\d{2})_(?P<tanggal_akhir>\d{4}-\d{2}-\d{2})_(?P<tipe_model>.+)$"
     match = re.match(pattern, model_name)
