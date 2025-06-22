@@ -177,24 +177,24 @@ if all_metadata:
         )
 
     metadata_options = [item['name'] for item in all_metadata]
-    selected_metadata_name = st.selectbox("Pilih Data Histori dan Parameter", metadata_options)
+    selected_metadata_name = st.selectbox("Pilih Metadata Histori dan Parameter", metadata_options)
     
     # Tampilkan atau hapus metadata
     if selected_metadata_name:
         col1_detail, col2_delete = st.columns(2)
         with col1_detail:
-            if st.button("Buka Detail Data Terpilih", key="buka_model_metadata"):
+            if st.button("Buka Detail Metadata Terpilih", key="buka_model_metadata"):
                 st.session_state.selected_model_metadata = {"name": selected_metadata_name}
                 st.rerun()
         with col2_delete:
             if get_user_role(st.session_state.username) == "admin":
-                if st.button("Hapus Data Terpilih", key="hapus_model_metadata"):
+                if st.button("Hapus Metadata Terpilih", key="hapus_model_metadata"):
                     delete_model_metadata_file(selected_metadata_name)
-                    st.success(f"Data '{selected_metadata_name}' berhasil dihapus.")
+                    st.success(f"Metadata '{selected_metadata_name}' berhasil dihapus.")
                     st.session_state.selected_model_metadata = None
                     st.rerun()
 else:
-    st.info("Belum ada histori training atau metadata parameter yang disimpan.")
+    st.info("Belum ada metadata histori training dan parameter yang disimpan.")
 
 # Detail metadata model
 if st.session_state.selected_model_metadata:
