@@ -139,6 +139,7 @@ if all_metadata:
     metadata_table_data = []
     for meta_item in all_metadata:
         info = get_model_metadata_file(meta_item["name"])
+        extracted_info = extract_model_info(meta_item["name"])
         metadata_table_data.append({
             "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
             "Nama Metadata": meta_item["name"],
