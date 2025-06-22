@@ -627,11 +627,11 @@ if start_button_pressed:
                 time_steps_list = [30, 60]
                 epochs_list = [50, 75, 100]
                 batch_sizes_list = [32, 64]
-            if freq == "Mingguan":
+            elif freq == "Mingguan":
                 time_steps_list = [12, 24]
                 epochs_list = [75, 100, 125]
                 batch_sizes_list = [8, 16]
-            if freq == "Bulanan":
+            else:
                 time_steps_list = [6, 12]
                 epochs_list = [100, 125, 150]
                 batch_sizes_list = [2, 4]
@@ -911,8 +911,12 @@ if start_button_pressed:
     st.write(df_future)
 # Menampilkan info apabila belum bisa memulai prediksi
 else:
+    valid_frequencies = ["Harian", "Mingguan", "Bulanan"]
     if not can_start_prediction and model_option == "Gunakan model dari database":
         st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
+    elif if freq not in valid_frequencies:
+        st.error(f"Frekuensi '{freq}' tidak dikenali. Pilih dari: {', '.join(valid_frequencies)}")
+        st.stop()
     else:
         st.info("Silakan isi parameter di sidebar, lalu tekan 'Mulai Prediksi'.")
 
