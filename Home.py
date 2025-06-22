@@ -275,7 +275,7 @@ if start_button_pressed:
     ax.tick_params(axis='x', labelrotation=45)
     st.pyplot(fig)
 
-    st.markdown("##### 3.4.2 Menampilkan grafik harga saham dari waktu ke waktu.")
+    st.markdown("##### 3.4.3 Menampilkan grafik harga saham dari waktu ke waktu.")
     # Grafik harga saham dari waktu ke waktu
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(df["Date"], df["Close"], color="blue")
@@ -527,6 +527,10 @@ if start_button_pressed:
         "duration": duration,
         "tipe": baseline_type
     }]
+
+    baseline_time_step = time_step
+    baseline_epochs = epochs
+    baseline_batch_size = batch_size
 
     # Jika melatih model baru, simpan model dan metadata ke database
     if model_option == "Latih model baru":
