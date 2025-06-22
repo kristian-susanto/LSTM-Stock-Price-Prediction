@@ -914,7 +914,7 @@ else:
     valid_frequencies = ["Harian", "Mingguan", "Bulanan"]
     if not can_start_prediction and model_option == "Gunakan model dari database":
         st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
-    elif if freq not in valid_frequencies:
+    elif freq not in valid_frequencies:
         st.error(f"Frekuensi '{freq}' tidak dikenali. Pilih dari: {', '.join(valid_frequencies)}")
         st.stop()
     else:
