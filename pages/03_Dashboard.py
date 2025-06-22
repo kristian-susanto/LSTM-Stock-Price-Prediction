@@ -162,14 +162,14 @@ if all_metadata:
 
     if st.session_state.logged_in:
         st.dataframe(
-            df_models[
+            df_all_metadata[
                 ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
             ],
             use_container_width=True
         )
     else:
         st.dataframe(
-            df_models[
+            df_all_metadata[
                 ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
             ],
             use_container_width=True
