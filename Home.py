@@ -15,7 +15,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_frequency_code, get_time_step, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_trading_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
+from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
@@ -32,6 +32,14 @@ SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
+
+# Konfigurasi ini memuat kode frekuensi, time_step, batch_size, dan epochs
+config = get_training_config(freq)
+# Ekstrak parameter dari konfigurasi
+freq_code = config["code"]
+time_step = config["time_step"]
+batch_size = config["batch_size"]
+epochs = config["epochs"]
 
 # Callback EarlyStopping
 early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
@@ -52,7 +60,7 @@ if model_option == "Gunakan model dari database":
         # Parsing tanggal input dan mengambil data dummy untuk menentukan rentang data aktual
         start_date = parse_date(start_date_str)
         end_date = parse_date(end_date_str)
-        temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date + pd.Timedelta(days=1), interval=get_frequency_code(freq), auto_adjust=True)
+        temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date + pd.Timedelta(days=1), interval=freq_code, auto_adjust=True)
 
         # Tentukan tanggal sebenarnya dari data yang tersedia
         if not temp_data_for_dates.empty:
@@ -132,7 +140,6 @@ if start_button_pressed:
             st.sidebar.error("Tanggal awal harus lebih kecil dari tanggal akhir.")
             st.stop()
 
-        freq_code = get_frequency_code(freq)
         data = yf.download(ticker, start=start_date, end=end_date + pd.Timedelta(days=1), interval=freq_code, auto_adjust=True)
 
         if data.empty:
@@ -321,7 +328,6 @@ if start_button_pressed:
     )
 
     # Bentuk urutan data berdasarkan time step (misal 30 hari sebelumnya untuk prediksi hari ke-31)
-    time_step = get_time_step(freq)
     data_scaled = df["Close Scaled"].values.reshape(-1, 1)
     X_seq, y_seq = create_dataset(data_scaled, time_step)
 
@@ -336,8 +342,6 @@ if start_button_pressed:
 
     st.markdown("#### 3.7 Data Splitting")
     st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Data dibagi menjadi dua, yaitu data latih (80%) untuk mempelajari model pada pola masa lalu dan data uji (20%) untuk menguji kemampuan model pada data yang belum pernah dilihat. Pembagian dapat menilai model dalam membuat prediksi yang akurat terhadap data baru.</div>""",unsafe_allow_html=True)
-    time_step = get_time_step(freq)
-
     # Split data ke train dan test set
     X, y = create_dataset(data_scaled, time_step)
 
@@ -441,15 +445,15 @@ if start_button_pressed:
                 else:
                     # Melatih model baru jika gagal
                     st.warning(f"Model baseline atau metadata untuk `{model_name_baseline}` tidak ditemukan di database. Melatih model baru sebagai gantinya.")
-                    model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, callbacks=[early_stop])
+                    model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, batch_size, callbacks=[early_stop])
         except Exception as e:
             # Tangani error saat loading
             st.error(f"Gagal memuat model baseline dari database: {e}. Melatih model baru sebagai gantinya.")
-            model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, callbacks=[early_stop])
+            model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, batch_size, callbacks=[early_stop])
     else:
         # Opsi lain dengan melatih model dari awal
         with st.spinner("Melatih model dan melakukan prediksi..."):
-            model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, callbacks=[early_stop])
+            model, history, duration, epochs, epochs_trained, batch_size = build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, batch_size, callbacks=[early_stop])
 
     st.markdown("#### 4.1 Model Selection")
     st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Pelatihan model menggunakan metode LSTM dengan menghasilkan satu model baseline.</div>""", unsafe_allow_html=True)
@@ -663,7 +667,7 @@ if start_button_pressed:
                 X_train_tune = X_train_tune.reshape(X_train_tune.shape[0], X_train_tune.shape[1], 1)
                 X_test_tune = X_test_tune.reshape(X_test_tune.shape[0], X_test_tune.shape[1], 1)
 
-                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, epochs=ep, batch_size=bs, callbacks=[early_stop])
+                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, ep, bs, callbacks=[early_stop])
                 pred = model_temp.predict(X_test_tune)
                 pred = scaler.inverse_transform(pred)
                 actual = scaler.inverse_transform(y_test_tune.reshape(-1, 1))
@@ -877,7 +881,7 @@ if start_button_pressed:
         progress_bar.progress((i + 1) / n_future)
 
     start_date = df["Date"].max()
-    future_dates = get_future_trading_dates(start_date, n_future, freq=freq)
+    future_dates = get_future_dates(start_date, n_future, freq=freq)
 
     future_prices = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
 

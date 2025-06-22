@@ -128,13 +128,18 @@ def parse_date(date_str):
             continue
     raise ValueError("Format tanggal tidak dikenali. Gunakan YYYY/MM/DD atau YYYY-MM-DD.")
 
-def get_frequency_code(freq):
-    """Mengembalikan kode frekuensi berdasarkan input teks frekuensi."""
-    return {"Harian": "1d", "Mingguan": "1wk", "Bulanan": "1mo"}[freq]
+def get_training_config(freq):
+    """Mengembalikan konfigurasi berdasarkan frekuensi, seperti kode frekuensi, time step, batch size, dan epochs."""
+    config_map = {
+        "Harian": {"code": "1d", "time_step": 60, "batch_size": 32, "epochs": 50},
+        "Mingguan": {"code": "1wk", "time_step": 24, "batch_size": 8, "epochs": 75},
+        "Bulanan": {"code": "1mo", "time_step": 12, "batch_size": 2, "epochs": 100},
+    }
 
-def get_time_step(freq):
-    """Mengembalikan panjang time step berdasarkan frekuensi."""
-    return {"Harian": 60, "Mingguan": 24, "Bulanan": 12}[freq]
+    if freq not in config_map:
+        raise ValueError(f"Frekuensi tidak dikenali: {freq}")
+
+    return config_map[freq]
 
 def save_info_model(model, freq, ticker, start_date, end_date, model_type, history, metadata):
     """Menyimpan model dan metadata dengan informasi tambahan pengguna dan waktu."""
@@ -177,7 +182,7 @@ def create_dataset(dataset, time_step=1):
         y.append(dataset[i + time_step, 0])
     return np.array(X), np.array(y)
 
-def build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs=50, batch_size=32, callbacks=None):
+def build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, batch_size, callbacks=None):
     """Membangun dan melatih model LSTM menggunakan dataset dan parameter tertentu."""
     model = Sequential()
     model.add(Input(shape=(time_step, 1)))
@@ -206,7 +211,7 @@ def highlight_rows(row, min_rmse):
     else:
         return ['' for _ in row]
 
-def get_future_trading_dates(start_date, n_steps, freq="Harian"):
+def get_future_dates(start_date, n_steps, freq="Harian"):
     """Menghasilkan tanggal perdagangan masa depan berdasarkan frekuensi dan langkah waktu."""
     future_dates = []
     current_date = pd.to_datetime(start_date)
