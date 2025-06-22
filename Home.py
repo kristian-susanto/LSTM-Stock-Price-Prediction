@@ -528,11 +528,6 @@ if start_button_pressed:
         "tipe": baseline_type
     }]
 
-    # Simpan parameter baseline untuk pengecualian di tuning
-    baseline_time_step = time_step
-    baseline_epochs = epochs
-    baseline_batch_size = batch_size
-
     # Jika melatih model baru, simpan model dan metadata ke database
     if model_option == "Latih model baru":
         metadata = {
@@ -637,6 +632,10 @@ if start_button_pressed:
                 epochs_list = [100, 125, 150]
                 batch_sizes_list = [4, 8]
 
+            # Simpan parameter baseline untuk pengecualian di tuning
+            baseline_time_step = time_step
+            baseline_epochs = epochs
+            baseline_batch_size = batch_size
             tuning_combinations = []
             
             for ts in time_steps_list:
