@@ -142,7 +142,7 @@ if all_metadata:
         metadata_table_data.append({
             "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
             "Nama Metadata": meta_item["name"],
-            "Ticker Saham": extracted_info["ticker"],
+            "Ticker": extracted_info["ticker"],
             "Frekuensi": extracted_info["frekuensi"],
             "Tanggal Awal": extracted_info["tanggal_awal"],
             "Tanggal Akhir": extracted_info["tanggal_akhir"],
@@ -158,19 +158,19 @@ if all_metadata:
 
     # Filter DataFrame jika ada masukan pencarian
     if search_ticker_in_model_metadata:
-        df_all_metadata = df_all_metadata[df_all_metadata["Ticker Saham"].str.contains(search_ticker_in_model_metadata, case=False)]
+        df_all_metadata = df_all_metadata[df_all_metadata["Ticker"].str.contains(search_ticker_in_model_metadata, case=False)]
 
     if st.session_state.logged_in:
         st.dataframe(
             df_all_metadata[
-                ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+                ["Tanggal Pembuatan", "Nama Metadata", "Ticker", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
             ],
             use_container_width=True
         )
     else:
         st.dataframe(
             df_all_metadata[
-                ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+                ["Tanggal Pembuatan", "Nama Metadata", "Ticker", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
             ],
             use_container_width=True
         )
