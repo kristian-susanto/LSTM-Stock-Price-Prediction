@@ -620,17 +620,17 @@ if start_button_pressed:
         # Melakukan tuning dengan kombinasi hyperparameter jika model tuning belum tersedia
         if model_option == "Latih model baru" or (model_option == "Gunakan model dari database" and model_best_tuning_loaded is None):
             if freq == "Harian":
-                time_steps_list = [10, 20, 60]
+                time_steps_list = [30, 60]
                 epochs_list = [50, 75, 100]
                 batch_sizes_list = [32, 64]
             elif freq == "Mingguan":
-                time_steps_list = [4, 8, 24]
+                time_steps_list = [12, 24]
                 epochs_list = [75, 100, 125]
                 batch_sizes_list = [8, 16]
             else:
-                time_steps_list = [2, 4, 12]
+                time_steps_list = [6, 12]
                 epochs_list = [100, 125, 150]
-                batch_sizes_list = [4, 8]
+                batch_sizes_list = [2, 4]
 
             # Simpan parameter baseline untuk pengecualian di tuning
             baseline_time_step = time_step
