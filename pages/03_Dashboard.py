@@ -141,9 +141,14 @@ if all_metadata:
         info = get_model_metadata_file(meta_item["name"])
         metadata_table_data.append({
             "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
-            "Nama Data": meta_item["name"],
+            "Nama Metadata": meta_item["name"],
+            "Ticker Saham": extracted_info["ticker"],
+            "Frekuensi": extracted_info["frekuensi"],
+            "Tanggal Awal": extracted_info["tanggal_awal"],
+            "Tanggal Akhir": extracted_info["tanggal_akhir"],
+            "Tipe Model": extracted_info["tipe_model"],
             "Nama Akun": info.get("username", "-"),
-            "Peran": info.get("role", "-")
+            "Peran": info.get("role", "guest")
         })
 
     df_all_metadata = pd.DataFrame(metadata_table_data)
@@ -156,9 +161,19 @@ if all_metadata:
         df_all_metadata = df_all_metadata[df_all_metadata["Ticker Saham"].str.contains(search_ticker_in_model_metadata, case=False)]
 
     if st.session_state.logged_in:
-        st.dataframe(df_all_metadata[["Tanggal Pembuatan", "Nama Data", "Nama Akun", "Peran"]], use_container_width=True)
+        st.dataframe(
+            df_models[
+                ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+            ],
+            use_container_width=True
+        )
     else:
-        st.dataframe(df_all_metadata[["Nama Data"]], use_container_width=True)
+        st.dataframe(
+            df_models[
+                ["Tanggal Pembuatan", "Nama Metadata", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+            ],
+            use_container_width=True
+        )
 
     metadata_options = [item['name'] for item in all_metadata]
     selected_metadata_name = st.selectbox("Pilih Data Histori dan Parameter", metadata_options)
