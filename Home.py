@@ -623,11 +623,11 @@ if start_button_pressed:
                 time_steps_list = [30, 60]
                 epochs_list = [50, 75, 100]
                 batch_sizes_list = [32, 64]
-            elif freq == "Mingguan":
+            if freq == "Mingguan":
                 time_steps_list = [12, 24]
                 epochs_list = [75, 100, 125]
                 batch_sizes_list = [8, 16]
-            else:
+            if freq == "Bulanan":
                 time_steps_list = [6, 12]
                 epochs_list = [100, 125, 150]
                 batch_sizes_list = [2, 4]
