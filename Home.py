@@ -33,14 +33,6 @@ random.seed(SEED)
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
 
-# Konfigurasi ini memuat kode frekuensi, time_step, batch_size, dan epochs
-config = get_training_config(freq)
-# Ekstrak parameter dari konfigurasi
-freq_code = config["code"]
-time_step = config["time_step"]
-batch_size = config["batch_size"]
-epochs = config["epochs"]
-
 # Callback EarlyStopping
 early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
@@ -52,6 +44,14 @@ end_date_str = st.sidebar.text_input("Tanggal Akhir", value=date.today().strftim
 freq = st.sidebar.selectbox("Frekuensi Data", options=["Harian", "Mingguan", "Bulanan"], help="Frekuensi data merupakan frekuensi pengambilan data harga saham.")
 model_option = st.sidebar.radio("Metode Pemodelan", ["Latih model baru", "Gunakan model dari database"], help="Pemilihan metode `Latih model baru` disarankan untuk prediksi terkini. Referensi untuk pilihan `Gunakan model dari database` dapat dilihat pada tabel di layar.")
 tune_model = st.sidebar.checkbox("Aktifkan Model Tuning", value=True, help="Mengombinasikan parameter model tuning secara otomatis untuk analisis prediksi yang mendalam.")
+
+# Konfigurasi ini memuat kode frekuensi, time_step, batch_size, dan epochs
+config = get_training_config(freq)
+# Ekstrak parameter dari konfigurasi
+freq_code = config["code"]
+time_step = config["time_step"]
+batch_size = config["batch_size"]
+epochs = config["epochs"]
 
 # Memuat dari database jika model tersedia
 can_start_prediction = True
