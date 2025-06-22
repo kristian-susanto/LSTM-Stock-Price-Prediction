@@ -134,7 +134,7 @@ def get_frequency_code(freq):
 
 def get_time_step(freq):
     """Mengembalikan panjang time step berdasarkan frekuensi."""
-    return {"Harian": 30, "Mingguan": 4, "Bulanan": 12}[freq]
+    return {"Harian": 60, "Mingguan": 24, "Bulanan": 12}[freq]
 
 def save_info_model(model, freq, ticker, start_date, end_date, model_type, history, metadata):
     """Menyimpan model dan metadata dengan informasi tambahan pengguna dan waktu."""

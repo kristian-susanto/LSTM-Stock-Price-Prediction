@@ -528,6 +528,7 @@ if start_button_pressed:
         "tipe": baseline_type
     }]
 
+    # Simpan parameter baseline untuk pengecualian di tuning
     baseline_time_step = time_step
     baseline_epochs = epochs
     baseline_batch_size = batch_size
@@ -635,10 +636,6 @@ if start_button_pressed:
                 time_steps_list = [2, 4, 12]
                 epochs_list = [100, 125, 150]
                 batch_sizes_list = [4, 8]
-            
-            baseline_time_step = time_step
-            baseline_epochs = epochs
-            baseline_batch_size = batch_size
 
             tuning_combinations = []
             
