@@ -194,7 +194,7 @@ def build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, b
 
     start_time = time.time()
 
-    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size, verbose=1, callbacks=callbacks)
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs, batch_size, verbose=1, callbacks=callbacks)
     epochs_trained = history.epoch[-1] + 1
     duration = time.time() - start_time
 

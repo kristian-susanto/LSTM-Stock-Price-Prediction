@@ -15,10 +15,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import get_training_config, parse_date, save_info_model, delete_old_model, extract_model_info
-from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, create_dataset
-from utils.model import build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary
-from utils.model import generate_lstm_model_config, model_architecture_summary, show_prediction_results
+from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
@@ -670,7 +667,7 @@ if start_button_pressed:
                 X_train_tune = X_train_tune.reshape(X_train_tune.shape[0], X_train_tune.shape[1], 1)
                 X_test_tune = X_test_tune.reshape(X_test_tune.shape[0], X_test_tune.shape[1], 1)
 
-                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, epochs=ep, batch_size=bs, callbacks=[early_stop])
+                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, ep, bs, callbacks=[early_stop])
                 pred = model_temp.predict(X_test_tune)
                 pred = scaler.inverse_transform(pred)
                 actual = scaler.inverse_transform(y_test_tune.reshape(-1, 1))
