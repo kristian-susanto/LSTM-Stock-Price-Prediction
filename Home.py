@@ -60,7 +60,7 @@ if model_option == "Gunakan model dari database":
         # Parsing tanggal input dan mengambil data dummy untuk menentukan rentang data aktual
         start_date = parse_date(start_date_str)
         end_date = parse_date(end_date_str)
-        temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date + pd.Timedelta(days=1), interval=freq_code, auto_adjust=True)
+        temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date, interval=freq_code, auto_adjust=True)
 
         # Tentukan tanggal sebenarnya dari data yang tersedia
         if not temp_data_for_dates.empty:
@@ -140,7 +140,7 @@ if start_button_pressed:
             st.sidebar.error("Tanggal awal harus lebih kecil dari tanggal akhir.")
             st.stop()
 
-        data = yf.download(ticker, start=start_date, end=end_date + pd.Timedelta(days=1), interval=freq_code, auto_adjust=True)
+        data = yf.download(ticker, start=start_date, end=end_date, interval=freq_code, auto_adjust=True)
 
         if data.empty:
             st.error(f"Data dengan ticker {ticker} tidak ditemukan atau gagal diunduh.")
