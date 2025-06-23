@@ -21,6 +21,7 @@ from tensorflow.keras.layers import LSTM, Dropout, Dense
 from tensorflow.keras.optimizers import Adam
 from utils.db import get_model_collection, get_model_metadata_collection
 
+# base function
 def list_model():
     """Mengembalikan daftar nama model yang tersimpan di database."""
     models_col = get_model_collection()
@@ -116,6 +117,7 @@ def delete_model_and_model_metadata_file(metadata_name: str):
     models_col.delete_one({"name": model_name})
     metadata_col.delete_one({"name": metadata_name})
 
+# Home.py
 def parse_date(date_str):
     """Mengonversi string tanggal ke objek date dengan format yang dikenali."""
     for fmt in ("%Y/%m/%d", "%Y-%m-%d"):
