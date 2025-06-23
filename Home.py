@@ -667,7 +667,7 @@ if start_button_pressed:
                 X_train_tune = X_train_tune.reshape(X_train_tune.shape[0], X_train_tune.shape[1], 1)
                 X_test_tune = X_test_tune.reshape(X_test_tune.shape[0], X_test_tune.shape[1], 1)
 
-                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, epochs=ep, batch_size=bs, callbacks=[early_stop])
+                model_temp, history_temp, duration_temp, _, epochs_trained, _ = build_and_train_model(X_train_tune, y_train_tune, X_test_tune, y_test_tune, ts, ep, bs, callbacks=[early_stop])
                 pred = model_temp.predict(X_test_tune)
                 pred = scaler.inverse_transform(pred)
                 actual = scaler.inverse_transform(y_test_tune.reshape(-1, 1))
