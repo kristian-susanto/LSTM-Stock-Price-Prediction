@@ -15,7 +15,19 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
+try:
+    from utils.model import (
+        list_model, get_model_file, load_model_file, load_model_metadata_file,
+        parse_date, get_training_config, save_info_model, delete_old_model,
+        create_dataset, build_and_train_model, highlight_rows, get_future_dates,
+        dataset_information_summary, generate_lstm_model_config,
+        model_architecture_summary, show_prediction_results, extract_model_info
+    )
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    st.error(f"Error import utils.model: {e}")
+    raise
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
