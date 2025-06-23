@@ -110,7 +110,7 @@ def load_model_metadata_file(metadata_name: str):
     doc = metadata_col.find_one({"name": metadata_name})
     return doc["data"] if doc and "data" in doc else None
 
-def delete_model_and_model_metadata_file(metadata_name: str):
+def delete_model_and_model_metadata_file(model_name: str, metadata_name: str):
     """Menghapus model dan metadata model dari database berdasarkan nama."""
     models_col = get_model_collection()
     metadata_col = get_model_metadata_collection()
