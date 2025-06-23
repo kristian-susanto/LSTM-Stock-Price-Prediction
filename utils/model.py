@@ -76,11 +76,6 @@ def load_model_file(model_name):
     else:
         raise ValueError("Model tidak ditemukan atau file korup.")
 
-def delete_model_file(model_name):
-    """Menghapus model dari database berdasarkan nama."""
-    models_col = get_model_collection()
-    models_col.delete_one({"name": model_name})
-
 def list_model_metadata():
     """Mengembalikan daftar metadata model yang tersimpan."""
     metadata_col = get_model_metadata_collection()
@@ -114,9 +109,11 @@ def load_model_metadata_file(metadata_name: str):
     doc = metadata_col.find_one({"name": metadata_name})
     return doc["data"] if doc and "data" in doc else None
 
-def delete_model_metadata_file(metadata_name: str):
-    """Menghapus metadata model dari database berdasarkan nama."""
+def delete_model_and_model_metadata_file(metadata_name: str):
+    """Menghapus model dan metadata model dari database berdasarkan nama."""
+    models_col = get_model_collection()
     metadata_col = get_model_metadata_collection()
+    models_col.delete_one({"name": model_name})
     metadata_col.delete_one({"name": metadata_name})
 
 def parse_date(date_str):

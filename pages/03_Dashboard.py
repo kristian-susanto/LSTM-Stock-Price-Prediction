@@ -5,7 +5,7 @@ import streamlit as st
 from datetime import datetime
 from utils.auth import hash_password, get_user_role, reset_password, get_pending_password_reset_requests, resolve_password_reset_request, delete_user, get_pending_delete_requests, resolve_delete_request, is_registration_enabled, toggle_registration, show_auth_sidebar
 from utils.db import get_users_collection
-from utils.model import list_model, load_model_file, get_model_file, delete_model_file, list_model_metadata, get_model_metadata_file, load_model_metadata_file, delete_model_metadata_file, extract_model_info
+from utils.model import list_model, load_model_file, get_model_file, list_model_metadata, get_model_metadata_file, load_model_metadata_file, delete_model_and_model_metadata_file, extract_model_info
 
 # Konfigurasi tampilan halaman
 st.set_page_config(page_title="Dashboard", page_icon="assets/favicon.ico", layout="wide")
@@ -90,12 +90,14 @@ if models:
     with col1_detail:
         if st.button("Buka Detail Model Terpilih", key="buka_model"):
             st.session_state.selected_model = selected_model
+            if "selected_model_metadata" not in st.session_state:
+                st.session_state.selected_model_metadata = None
             st.rerun()
     # Hanya admin yang bisa menghapus model
     with col2_delete:
         if get_user_role(st.session_state.username) == "admin":
             if st.button("Hapus Model Terpilih", key="hapus_model"):
-                delete_model_file(selected_model)
+                delete_model_and_model_metadata_file(selected_model)
                 st.success(f"Model '{selected_model}' berhasil dihapus.")
                 st.rerun()
 else:
@@ -112,11 +114,13 @@ if st.session_state.selected_model:
 
         if st.button("Tutup Detail", key="tutup_detail_model"):
             st.session_state.selected_model = None
+            st.session_state.selected_model_metadata = None
             st.rerun()
     except Exception as e:
         st.error(f"Gagal memuat model: {e}")
         if st.button("Tutup Detail", key="tutup_detail_model"):
             st.session_state.selected_model = None
+            st.session_state.selected_model_metadata = None
             st.rerun()
 
 st.divider()
@@ -185,11 +189,13 @@ if all_metadata:
         with col1_detail:
             if st.button("Buka Detail Metadata Terpilih", key="buka_model_metadata"):
                 st.session_state.selected_model_metadata = {"name": selected_metadata_name}
+                if "selected_model" not in st.session_state:
+                    st.session_state.selected_model = None
                 st.rerun()
         with col2_delete:
             if get_user_role(st.session_state.username) == "admin":
                 if st.button("Hapus Metadata Terpilih", key="hapus_model_metadata"):
-                    delete_model_metadata_file(selected_metadata_name)
+                    delete_model_and_model_metadata_file(selected_metadata_name)
                     st.success(f"Metadata '{selected_metadata_name}' berhasil dihapus.")
                     st.session_state.selected_model_metadata = None
                     st.rerun()
@@ -223,6 +229,7 @@ if st.session_state.selected_model_metadata:
             st.info("Data 'loss' tidak ditemukan dalam histori yang disimpan.")
 
         if st.button("Tutup Detail", key="tutup_detail_model_metadata"):
+            st.session_state.selected_model = None
             st.session_state.selected_model_metadata = None
             st.rerun()
     else:
