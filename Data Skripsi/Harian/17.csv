@@ -1,0 +1,6 @@
+﻿,Layer (type),Output Shape,Param #
+0,lstm_4 (LSTM),"(None, 60, 50)","10,400"
+1,dropout_4 (Dropout),"(None, 60, 50)",0
+2,lstm_5 (LSTM),"(None, 50)","20,200"
+3,dropout_5 (Dropout),"(None, 50)",0
+4,dense_2 (Dense),"(None, 1)",51

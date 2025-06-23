@@ -1,0 +1,6 @@
+﻿,Column,Non-Null Count,Dtype
+0,"Close,HLAG.DE",500 non-null,float64
+1,"High,HLAG.DE",500 non-null,float64
+2,"Low,HLAG.DE",500 non-null,float64
+3,"Open,HLAG.DE",500 non-null,float64
+4,"Volume,HLAG.DE",500 non-null,int64

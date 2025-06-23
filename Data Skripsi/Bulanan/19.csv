@@ -1,0 +1,2 @@
+﻿,Tipe Model,Time Step,Epoch,Epochs Terlatih,Batch Size,RMSE,MAPE (%),Durasi (detik)
+0,Tuning terbaik,6,125,75,2,13.4071,7.11,28.53

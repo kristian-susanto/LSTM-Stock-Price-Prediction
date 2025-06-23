@@ -1,0 +1,2 @@
+﻿,Tipe Model,Time Step,Epoch,Epochs Terlatih,Batch Size,RMSE,MAPE (%),Durasi (detik)
+0,Baseline,24,75,75,8,9.8963,5.5,71.26

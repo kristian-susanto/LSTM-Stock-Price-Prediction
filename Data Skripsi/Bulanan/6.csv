@@ -1,0 +1,3 @@
+﻿,Column,Non-Null Count,Dtype
+0,Date,115 non-null,datetime64[ns]
+1,Close,115 non-null,float64
