@@ -164,11 +164,10 @@ def delete_old_model(freq, ticker, start_date, end_date, model_type):
     model_name = f"{ticker}_{freq}_{start_date}_{end_date}_{model_type}"
     
     try:
-        delete_model_file(model_name)
-        delete_model_metadata_file(model_name)
+        delete_model_and_model_metadata_file(model_name)
         return True
     except Exception as e:
-        st.warning(f"Gagal menghapus model lama atau metadata '{model_name}': {e}")
+        st.warning(f"Gagal menghapus model atau metadata model yang lama dari '{model_name}': {e}")
         return False
 
 def create_dataset(dataset, time_step=1):
