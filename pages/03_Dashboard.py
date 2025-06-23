@@ -97,7 +97,7 @@ if models:
     with col2_delete:
         if get_user_role(st.session_state.username) == "admin":
             if st.button("Hapus Model Terpilih", key="hapus_model"):
-                delete_model_and_model_metadata_file(model_name=selected_model_name, metadata_name=selected_metadata_name)
+                delete_model_and_model_metadata_file(model_name=selected_model, metadata_name=selected_metadata_name)
                 st.success(f"Model '{selected_model}' berhasil dihapus.")
                 st.rerun()
 else:
@@ -195,7 +195,7 @@ if all_metadata:
         with col2_delete:
             if get_user_role(st.session_state.username) == "admin":
                 if st.button("Hapus Metadata Terpilih", key="hapus_model_metadata"):
-                    delete_model_and_model_metadata_file(model_name=selected_model_name, metadata_name=selected_metadata_name)
+                    delete_model_and_model_metadata_file(model_name=selected_model, metadata_name=selected_metadata_name)
                     st.success(f"Metadata '{selected_metadata_name}' berhasil dihapus.")
                     st.session_state.selected_model_metadata = None
                     st.rerun()
