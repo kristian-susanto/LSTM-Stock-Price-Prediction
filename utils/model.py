@@ -21,7 +21,6 @@ from tensorflow.keras.layers import LSTM, Dropout, Dense
 from tensorflow.keras.optimizers import Adam
 from utils.db import get_model_collection, get_model_metadata_collection
 
-# base function
 def list_model():
     """Mengembalikan daftar nama model yang tersimpan di database."""
     models_col = get_model_collection()
@@ -77,6 +76,11 @@ def load_model_file(model_name):
     else:
         raise ValueError("Model tidak ditemukan atau file korup.")
 
+def delete_model_file(model_name):
+    """Menghapus model dari database berdasarkan nama."""
+    models_col = get_model_collection()
+    models_col.delete_one({"name": model_name})
+
 def list_model_metadata():
     """Mengembalikan daftar metadata model yang tersimpan."""
     metadata_col = get_model_metadata_collection()
@@ -110,14 +114,11 @@ def load_model_metadata_file(metadata_name: str):
     doc = metadata_col.find_one({"name": metadata_name})
     return doc["data"] if doc and "data" in doc else None
 
-def delete_model_and_model_metadata_file(model_name: str, metadata_name: str):
-    """Menghapus model dan metadata model dari database berdasarkan nama."""
-    models_col = get_model_collection()
+def delete_model_metadata_file(metadata_name: str):
+    """Menghapus metadata model dari database berdasarkan nama."""
     metadata_col = get_model_metadata_collection()
-    models_col.delete_one({"name": model_name})
     metadata_col.delete_one({"name": metadata_name})
 
-# Home.py
 def parse_date(date_str):
     """Mengonversi string tanggal ke objek date dengan format yang dikenali."""
     for fmt in ("%Y/%m/%d", "%Y-%m-%d"):
@@ -166,10 +167,11 @@ def delete_old_model(freq, ticker, start_date, end_date, model_type):
     model_name = f"{ticker}_{freq}_{start_date}_{end_date}_{model_type}"
     
     try:
-        delete_model_and_model_metadata_file(model_name)
+        delete_model_file(model_name)
+        delete_model_metadata_file(model_name)
         return True
     except Exception as e:
-        st.warning(f"Gagal menghapus model atau metadata model yang lama dari '{model_name}': {e}")
+        st.warning(f"Gagal menghapus model lama atau metadata '{model_name}': {e}")
         return False
 
 def create_dataset(dataset, time_step=1):
