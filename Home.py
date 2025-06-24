@@ -66,9 +66,9 @@ if model_option == "Gunakan model dari database":
         if not temp_data_for_dates.empty:
             actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
             actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
-        else:
-            actual_start_date_for_check = start_date.strftime("%Y-%m-%d")
-            actual_end_date_for_check = end_date.strftime("%Y-%m-%d")
+        # else:
+        #     actual_start_date_for_check = start_date.strftime("%Y-%m-%d")
+        #     actual_end_date_for_check = end_date.strftime("%Y-%m-%d")
 
         # Cek ketersediaan model baseline dan tuning terbaik di database
         model_name_baseline_check = f"{ticker}_{freq}_{actual_start_date_for_check}_{actual_end_date_for_check}_baseline"
