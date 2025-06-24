@@ -128,6 +128,15 @@ def parse_date(date_str):
             continue
     raise ValueError("Format tanggal tidak dikenali. Gunakan YYYY/MM/DD atau YYYY-MM-DD.")
 
+def parse_date2(date_str):
+    """Mengonversi string tanggal ke objek date dengan format yang dikenali."""
+    for fmt in ("%Y/%m/%d", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
+    raise ValueError("Format tanggal tidak dikenali. Gunakan YYYY/MM/DD atau YYYY-MM-DD.")
+
 def get_training_config(freq):
     """Mengembalikan konfigurasi berdasarkan frekuensi, seperti kode frekuensi, time step, batch size, dan epochs."""
     config_map = {
