@@ -63,9 +63,11 @@ if model_option == "Gunakan model dari database":
         temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date, interval=freq_code, auto_adjust=True)
 
         # Tentukan tanggal sebenarnya dari data yang tersedia
-        if not temp_data_for_dates.empty:
-            actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
-            actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
+        # if not temp_data_for_dates.empty:
+            # actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
+            # actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
+        actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
+        actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
         # else:
         #     actual_start_date_for_check = start_date.strftime("%Y-%m-%d")
         #     actual_end_date_for_check = end_date.strftime("%Y-%m-%d")
@@ -914,6 +916,64 @@ else:
     valid_frequencies = ["Harian", "Mingguan", "Bulanan"]
     if not can_start_prediction and model_option == "Gunakan model dari database":
         st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
+        st.markdown(
+            f"""
+            <div style='text-align: justify; margin-bottom: 10px'>
+                Tabel di bawah ini menampilkan daftar model yang telah diunggah atau disimpan oleh pengguna
+                yang dapat digunakan pada pemilihan metode pemodelan "Gunakan model dari database" saat 
+                pengaturan model. Setiap model memiliki informasi seperti nama model, tanggal dibuat, pengguna 
+                yang mengunggah, dan peran pengguna tersebut.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Ambil daftar model yang tersedia
+        models = list_model()
+
+        if models:
+            # Tampilkan model ke dalam DataFrame
+            model_data = []
+            for model_name in models:
+                info = get_model_file(model_name)
+                extracted_info = extract_model_info(model_name)
+                model_data.append({
+                    "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
+                    "Nama Model": model_name,
+                    "Ticker Saham": extracted_info["ticker"],
+                    "Frekuensi": extracted_info["frekuensi"],
+                    "Tanggal Awal": extracted_info["tanggal_awal"],
+                    "Tanggal Akhir": extracted_info["tanggal_akhir"],
+                    "Tipe Model": extracted_info["tipe_model"],
+                    "Nama Akun": info.get("username", "-"),
+                    "Peran": info.get("role", "guest")
+                })
+
+            df_models = pd.DataFrame(model_data)
+
+            # Melakukan pencarian ticker
+            search_ticker = st.text_input("Cari Ticker Saham", "")
+
+            # Filter DataFrame jika ada masukan pencarian
+            if search_ticker:
+                df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker, case=False)]
+
+            if st.session_state.logged_in:
+                st.dataframe(
+                    df_models[
+                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+                    ],
+                    use_container_width=True
+                )
+            else:
+                st.dataframe(
+                    df_models[
+                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+                    ],
+                    use_container_width=True
+                )
+        else:
+            st.info("Belum ada model yang disimpan.")
     elif freq not in valid_frequencies:
         st.error(f"Frekuensi '{freq}' tidak dikenali. Pilih dari: {', '.join(valid_frequencies)}")
         st.stop()
