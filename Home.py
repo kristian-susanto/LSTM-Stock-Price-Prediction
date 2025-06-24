@@ -54,8 +54,7 @@ batch_size = config["batch_size"]
 epochs = config["epochs"]
 
 # Memuat dari database jika model tersedia
-# Tombol untuk memulai proses prediksi
-can_start_prediction = True # Initialize to True, will be set to False if issues
+can_start_prediction = True
 if model_option == "Gunakan model dari database":
     try:
         # Parsing tanggal input dan mengambil data dummy untuk menentukan rentang data aktual
@@ -69,6 +68,12 @@ if model_option == "Gunakan model dari database":
         model_best_tuning_check = f"{ticker}_{freq}_{parsed_start_date}_{parsed_end_date}_best tuning"
         model_best_tuning_exists = load_model_metadata_file(model_best_tuning_check) is not None
 
+        # Menampilkan peringatan jika model tersedia
+        if model_baseline_exists:
+            if tune_model and model_best_tuning_exists:
+                st.sidebar.success(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
+            st.sidebar.success(f"Model baseline untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
+
         # Menampilkan peringatan jika model tidak tersedia
         if not model_baseline_exists:
             st.sidebar.warning(f"Model baseline untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` tidak ditemukan di database.")
@@ -81,11 +86,6 @@ if model_option == "Gunakan model dari database":
         if not model_baseline_exists and (not tune_model or not model_best_tuning_exists):
             st.sidebar.info(f"Silakan ganti parameter atau pilih `Latih model baru` jika Anda ingin melanjutkan.")
             can_start_prediction = False
-
-        if model_baseline_exists:
-            if tune_model and model_best_tuning_exists:
-                st.sidebar.success(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
-            st.sidebar.success(f"Model baseline untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
 
     except ValueError as e:
         st.sidebar.error(f"Terjadi kesalahan dalam format tanggal: {e}")
@@ -823,7 +823,8 @@ if start_button_pressed:
             di mana semakin kecil nilainya maka semakin akurat prediksi. Adapun metrik MAPE
             dengan persentase kesalahan rata-rata yang semakin kecil nilainya maka semakin baik. 
             Warna latar baris biru dan hijau pada baris tabel masing-masing menandakan model 
-            baseline dan best tuning.
+            baseline dan best tuning. Apabila hanya terdapat warna latar baris hijau saja 
+            maka model tersebut termasuk model baseline dan terbaik.
         </div>
         """,
         unsafe_allow_html=True
