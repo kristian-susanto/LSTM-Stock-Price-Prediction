@@ -15,7 +15,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, parse_date2, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
+from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
@@ -120,8 +120,8 @@ if start_button_pressed:
     # 2. Data Understanding
     st.subheader("2. Data Understanding")
     try:
-        start_date = parse_date2(start_date_str)
-        end_date = parse_date2(end_date_str)
+        start_date = parse_date(start_date_str)
+        end_date = parse_date(end_date_str)
 
         if start_date > end_date:
             st.sidebar.error("Tanggal Awal tidak boleh lebih besar dari Tanggal Akhir.")
@@ -136,7 +136,9 @@ if start_button_pressed:
             st.sidebar.error("Tanggal awal harus lebih kecil dari tanggal akhir.")
             st.stop()
 
-        data = yf.download(ticker, start=start_date, end=end_date, interval=freq_code, auto_adjust=True)
+        end_date_for_yf = (datetime.combine(end_date, datetime.min.time()) + pd.Timedelta(days=1)).date()
+
+        data = yf.download(ticker, start=start_date, end=end_date_for_yf, interval=freq_code, auto_adjust=True)
 
         if data.empty:
             st.error(f"Data dengan ticker {ticker} tidak ditemukan atau gagal diunduh.")
