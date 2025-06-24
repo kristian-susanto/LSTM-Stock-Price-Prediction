@@ -54,36 +54,27 @@ batch_size = config["batch_size"]
 epochs = config["epochs"]
 
 # Memuat dari database jika model tersedia
-can_start_prediction = True
+# Tombol untuk memulai proses prediksi
+can_start_prediction = True # Initialize to True, will be set to False if issues
 if model_option == "Gunakan model dari database":
     try:
-        # Parsing tanggal input dan mengambil data dummy untuk menentukan rentang data aktual
-        start_date = parse_date(start_date_str)
-        end_date = parse_date(end_date_str)
-        temp_data_for_dates = yf.download(ticker, start=start_date, end=end_date - pd.Timedelta(days=1), interval=freq_code, auto_adjust=True)
+        # Use the *parsed input dates* for consistency with how models are named
+        # You still need to parse them to ensure they are valid dates
+        parsed_start_date = parse_date(start_date_str).strftime("%Y-%m-%d")
+        parsed_end_date = parse_date(end_date_str).strftime("%Y-%m-%d")
 
-        # Tentukan tanggal sebenarnya dari data yang tersedia
-        if not temp_data_for_dates.empty:
-            actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
-            actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
-        # actual_start_date_for_check = temp_data_for_dates.index.min().to_pydatetime().date().strftime("%Y-%m-%d")
-        # actual_end_date_for_check = temp_data_for_dates.index.max().to_pydatetime().date().strftime("%Y-%m-%d")
-        else:
-            actual_start_date_for_check = start_date.strftime("%Y-%m-%d")
-            actual_end_date_for_check = end_date.strftime("%Y-%m-%d")
-
-        # Cek ketersediaan model baseline dan tuning terbaik di database
-        model_name_baseline_check = f"{ticker}_{freq}_{actual_start_date_for_check}_{actual_end_date_for_check}_baseline"
+        # Construct the model names using the *parsed input dates*
+        model_name_baseline_check = f"{ticker}_{freq}_{parsed_start_date}_{parsed_end_date}_baseline"
         model_baseline_exists = load_model_metadata_file(model_name_baseline_check) is not None
 
-        model_best_tuning_check = f"{ticker}_{freq}_{actual_start_date_for_check}_{actual_end_date_for_check}_best tuning"
+        model_best_tuning_check = f"{ticker}_{freq}_{parsed_start_date}_{parsed_end_date}_best tuning"
         model_best_tuning_exists = load_model_metadata_file(model_best_tuning_check) is not None
-        
+
         # Menampilkan peringatan jika model tidak tersedia
         if not model_baseline_exists:
             st.sidebar.warning(f"Model baseline untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` tidak ditemukan di database.")
             can_start_prediction = False
-        
+
         if tune_model and not model_best_tuning_exists:
             st.sidebar.warning(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` tidak ditemukan di database. Salah satu cara untuk melanjutkan adalah menonaktifkan fitur model tuning.")
             can_start_prediction = False
@@ -92,6 +83,9 @@ if model_option == "Gunakan model dari database":
             st.sidebar.info(f"Silakan ganti parameter atau pilih `Latih model baru` jika Anda ingin melanjutkan.")
             can_start_prediction = False
 
+    except ValueError as e: # Catch parsing errors for start/end dates
+        st.sidebar.error(f"Terjadi kesalahan dalam format tanggal: {e}")
+        can_start_prediction = False
     except Exception as e:
         st.sidebar.error(f"Terjadi kesalahan saat memeriksa model di database: {e}")
         can_start_prediction = False
