@@ -368,3 +368,63 @@ def extract_model_info(model_name):
         "tanggal_akhir": "Tidak diketahui",
         "tipe_model": "Tidak diketahui"
     }
+
+def show_extract_model_info_for_home_page():
+    st.markdown(
+        f"""
+        <div style='text-align: justify; margin-bottom: 10px'>
+            Tabel di bawah ini menampilkan daftar model yang telah diunggah atau disimpan oleh pengguna
+            yang dapat digunakan pada pemilihan metode pemodelan "Gunakan model dari database" saat 
+            pengaturan model. Setiap model memiliki informasi seperti nama model, tanggal dibuat, pengguna 
+            yang mengunggah, dan peran pengguna tersebut.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Ambil daftar model yang tersedia
+    models = list_model()
+
+    if models:
+        # Tampilkan model ke dalam DataFrame
+        model_data = []
+        for model_name in models:
+            info = get_model_file(model_name)
+            extracted_info = extract_model_info(model_name)
+            model_data.append({
+                "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
+                "Nama Model": model_name,
+                "Ticker Saham": extracted_info["ticker"],
+                "Frekuensi": extracted_info["frekuensi"],
+                "Tanggal Awal": extracted_info["tanggal_awal"],
+                "Tanggal Akhir": extracted_info["tanggal_akhir"],
+                "Tipe Model": extracted_info["tipe_model"],
+                "Nama Akun": info.get("username", "-"),
+                "Peran": info.get("role", "guest")
+            })
+
+        df_models = pd.DataFrame(model_data)
+
+        # Melakukan pencarian ticker
+        search_ticker = st.text_input("Cari Ticker Saham", "")
+
+        # Filter DataFrame jika ada masukan pencarian
+        if search_ticker:
+            df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker, case=False)]
+
+        if st.session_state.logged_in:
+            st.dataframe(
+                df_models[
+                    ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
+                ],
+                use_container_width=True
+            )
+        else:
+            st.dataframe(
+                df_models[
+                    ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
+                ],
+                use_container_width=True
+            )
+    else:
+        st.info("Belum ada model yang disimpan.")

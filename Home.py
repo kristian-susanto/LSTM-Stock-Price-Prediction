@@ -15,7 +15,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
 from utils.auth import authenticate, get_user_role, show_auth_sidebar
-from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info
+from utils.model import list_model, get_model_file, load_model_file, load_model_metadata_file, parse_date, get_training_config, save_info_model, delete_old_model, create_dataset, build_and_train_model, highlight_rows, get_future_dates, dataset_information_summary, generate_lstm_model_config, model_architecture_summary, show_prediction_results, extract_model_info, show_extract_model_info_for_home_page
 from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
@@ -58,12 +58,11 @@ epochs = config["epochs"]
 can_start_prediction = True # Initialize to True, will be set to False if issues
 if model_option == "Gunakan model dari database":
     try:
-        # Use the *parsed input dates* for consistency with how models are named
-        # You still need to parse them to ensure they are valid dates
+        # Parsing tanggal input dan mengambil data dummy untuk menentukan rentang data aktual
         parsed_start_date = parse_date(start_date_str).strftime("%Y-%m-%d")
         parsed_end_date = parse_date(end_date_str).strftime("%Y-%m-%d")
 
-        # Construct the model names using the *parsed input dates*
+        # Cek ketersediaan model baseline dan tuning terbaik di database
         model_name_baseline_check = f"{ticker}_{freq}_{parsed_start_date}_{parsed_end_date}_baseline"
         model_baseline_exists = load_model_metadata_file(model_name_baseline_check) is not None
 
@@ -83,7 +82,12 @@ if model_option == "Gunakan model dari database":
             st.sidebar.info(f"Silakan ganti parameter atau pilih `Latih model baru` jika Anda ingin melanjutkan.")
             can_start_prediction = False
 
-    except ValueError as e: # Catch parsing errors for start/end dates
+        if model_baseline_exists:
+            if tune_model and model_best_tuning_exists:
+                st.sidebar.success(f"Model tuning terbaik untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
+            st.sidebar.success(f"Model baseline untuk ticker `{ticker}` dari {start_date_str} sampai {end_date_str} dengan frekuensi data `{freq}` ditemukan di database.")
+
+    except ValueError as e:
         st.sidebar.error(f"Terjadi kesalahan dalam format tanggal: {e}")
         can_start_prediction = False
     except Exception as e:
@@ -911,126 +915,10 @@ if start_button_pressed:
 else:
     valid_frequencies = ["Harian", "Mingguan", "Bulanan"]
     if not can_start_prediction and model_option == "Gunakan model dari database":
-        st.info("Harap periksa pesan peringatan di sidebar dan sesuaikan parameter Anda, atau pilih `Latih model baru`.")
-        st.markdown(
-            f"""
-            <div style='text-align: justify; margin-bottom: 10px'>
-                Tabel di bawah ini menampilkan daftar model yang telah diunggah atau disimpan oleh pengguna
-                yang dapat digunakan pada pemilihan metode pemodelan "Gunakan model dari database" saat 
-                pengaturan model. Setiap model memiliki informasi seperti nama model, tanggal dibuat, pengguna 
-                yang mengunggah, dan peran pengguna tersebut.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # Ambil daftar model yang tersedia
-        models = list_model()
-
-        if models:
-            # Tampilkan model ke dalam DataFrame
-            model_data = []
-            for model_name in models:
-                info = get_model_file(model_name)
-                extracted_info = extract_model_info(model_name)
-                model_data.append({
-                    "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
-                    "Nama Model": model_name,
-                    "Ticker Saham": extracted_info["ticker"],
-                    "Frekuensi": extracted_info["frekuensi"],
-                    "Tanggal Awal": extracted_info["tanggal_awal"],
-                    "Tanggal Akhir": extracted_info["tanggal_akhir"],
-                    "Tipe Model": extracted_info["tipe_model"],
-                    "Nama Akun": info.get("username", "-"),
-                    "Peran": info.get("role", "guest")
-                })
-
-            df_models = pd.DataFrame(model_data)
-
-            # Melakukan pencarian ticker
-            search_ticker = st.text_input("Cari Ticker Saham", "")
-
-            # Filter DataFrame jika ada masukan pencarian
-            if search_ticker:
-                df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker, case=False)]
-
-            if st.session_state.logged_in:
-                st.dataframe(
-                    df_models[
-                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
-                    ],
-                    use_container_width=True
-                )
-            else:
-                st.dataframe(
-                    df_models[
-                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
-                    ],
-                    use_container_width=True
-                )
-        else:
-            st.info("Belum ada model yang disimpan.")
+        show_extract_model_info_for_home_page()
     elif freq not in valid_frequencies:
         st.error(f"Frekuensi '{freq}' tidak dikenali. Pilih dari: {', '.join(valid_frequencies)}")
         st.stop()
     else:
         st.info("Silakan isi parameter di sidebar, lalu tekan 'Mulai Prediksi'.")
-
-        st.markdown(
-            f"""
-            <div style='text-align: justify; margin-bottom: 10px'>
-                Tabel di bawah ini menampilkan daftar model yang telah diunggah atau disimpan oleh pengguna
-                yang dapat digunakan pada pemilihan metode pemodelan "Gunakan model dari database" saat 
-                pengaturan model. Setiap model memiliki informasi seperti nama model, tanggal dibuat, pengguna 
-                yang mengunggah, dan peran pengguna tersebut.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # Ambil daftar model yang tersedia
-        models = list_model()
-
-        if models:
-            # Tampilkan model ke dalam DataFrame
-            model_data = []
-            for model_name in models:
-                info = get_model_file(model_name)
-                extracted_info = extract_model_info(model_name)
-                model_data.append({
-                    "Tanggal Pembuatan": info.get("created_at", "Tidak diketahui"),
-                    "Nama Model": model_name,
-                    "Ticker Saham": extracted_info["ticker"],
-                    "Frekuensi": extracted_info["frekuensi"],
-                    "Tanggal Awal": extracted_info["tanggal_awal"],
-                    "Tanggal Akhir": extracted_info["tanggal_akhir"],
-                    "Tipe Model": extracted_info["tipe_model"],
-                    "Nama Akun": info.get("username", "-"),
-                    "Peran": info.get("role", "guest")
-                })
-
-            df_models = pd.DataFrame(model_data)
-
-            # Melakukan pencarian ticker
-            search_ticker = st.text_input("Cari Ticker Saham", "")
-
-            # Filter DataFrame jika ada masukan pencarian
-            if search_ticker:
-                df_models = df_models[df_models["Ticker Saham"].str.contains(search_ticker, case=False)]
-
-            if st.session_state.logged_in:
-                st.dataframe(
-                    df_models[
-                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model", "Nama Akun", "Peran"]
-                    ],
-                    use_container_width=True
-                )
-            else:
-                st.dataframe(
-                    df_models[
-                        ["Tanggal Pembuatan", "Nama Model", "Ticker Saham", "Frekuensi", "Tanggal Awal", "Tanggal Akhir", "Tipe Model"]
-                    ],
-                    use_container_width=True
-                )
-        else:
-            st.info("Belum ada model yang disimpan.")
+        show_extract_model_info_for_home_page()
