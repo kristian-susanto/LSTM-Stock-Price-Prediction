@@ -10,7 +10,7 @@ import tensorflow as tf
 import streamlit as st
 from datetime import datetime, date
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from tensorflow.keras.callbacks import EarlyStopping
 
 # ===== Import Modul Autentikasi, Model, dan Fungsi Pendukung =====
@@ -405,7 +405,8 @@ if start_button_pressed:
             Apabila memerlukan proses tuning (melakukan berbagai kombinasi parameter untuk 
             mencari hasil prediksi terbaik) maka membutuhkan lebih banyak waktu karena 
             setiap model diuji satu per satu. Hasilnya dibandingkan berdasarkan akurasi prediksi 
-            menggunakan metrik seperti RMSE (Root Mean Squared Error) dan MAPE (Mean Absolute Percentage Error).
+            menggunakan metrik seperti RMSE (Root Mean Squared Error), MAPE (Mean Absolute Percentage Error), 
+            dan R².
         </div>
         """,
         unsafe_allow_html=True
@@ -435,6 +436,7 @@ if start_button_pressed:
                     duration_baseline_loaded = metadata_baseline_loaded.get("duration")
                     rmse_baseline_loaded = metadata_baseline_loaded.get("rmse")
                     mape_baseline_loaded = metadata_baseline_loaded.get("mape")
+                    r2_baseline_loaded = metadata_baseline_loaded.get("r2")
                         
                     st.success(f"Model baseline dan metadata untuk '{model_name_baseline}' berhasil dimuat dari database.")
                         
@@ -512,7 +514,7 @@ if start_button_pressed:
     plot_dates_test = df["Date"].iloc[time_step + len(y_train):]
 
     # Fungsi custom menampilkan hasil prediksi dan menghitung metrik evaluasi
-    df_result, rmse, mape = show_prediction_results(
+    df_result, rmse, mape, r2 = show_prediction_results(
         y_true_rescaled=y_test_rescaled,
         y_pred_rescaled=y_pred_rescaled,
         plot_dates=plot_dates_test,
@@ -528,6 +530,7 @@ if start_button_pressed:
         "batch_size": batch_size,
         "rmse": rmse,
         "mape": mape,
+        "r2": r2,
         "model": model,
         "history": history,
         "duration": duration,
@@ -543,6 +546,7 @@ if start_button_pressed:
             "batch_size": batch_size,
             "rmse": rmse,
             "mape": mape,
+            "r2": r2,
             "duration": duration,
         }
         files_deleted = delete_old_model(freq, ticker, actual_start_date, actual_end_date, model_type="baseline")
@@ -559,9 +563,10 @@ if start_button_pressed:
         "Batch Size": batch_size,
         "RMSE": round(rmse, 4),
         "MAPE (%)": round(mape * 100, 2),
+        "R² (%)": round(r2 * 100, 2),
         "Durasi (detik)": round(duration, 2)
     }])
-    baseline_table = (baseline_table.style.format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
+    baseline_table = (baseline_table.style.format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "R² (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
 
     # Proses hyperparameter tuning
     if tune_model:
@@ -572,6 +577,7 @@ if start_button_pressed:
                 Menampilkan hasil evaluasi model baseline dalam bentuk tabel. Terdapat metrik RMSE
                 di mana semakin kecil nilainya maka semakin akurat prediksi. Adapun metrik MAPE
                 dengan persentase kesalahan rata-rata yang semakin kecil nilainya maka semakin baik.
+                Metrik R² menilai akurasi yang diolah dalam pemrosesan algoritma LSTM tersebut.
             </div>
             """,
             unsafe_allow_html=True
@@ -602,6 +608,7 @@ if start_button_pressed:
                             "batch_size": metadata_best_tuning_loaded.get("batch_size"),
                             "rmse": metadata_best_tuning_loaded.get("rmse"),
                             "mape": metadata_best_tuning_loaded.get("mape"),
+                            "r2": metadata_best_tuning_loaded.get("r2"),
                             "model": model_best_tuning_loaded,
                             "history": history_best_tuning_loaded,
                             "duration": metadata_best_tuning_loaded.get("duration"),
@@ -612,7 +619,7 @@ if start_button_pressed:
                         st.warning(f"Model best tuning atau metadata untuk '{model_name_best_tuning}' tidak ditemukan di database. Akan melakukan tuning model baru jika opsi 'Latih model baru' dipilih.")
             except Exception as e:
                 st.error(f"Gagal memuat model best tuning dari database: {e}.")
-            best = sorted(tuning_results, key=lambda x: x["rmse"])[0]
+            best = sorted(tuning_results, key=lambda x: x["r2"])[0]
             metadata_best = {
                 "time_step": best["time_step"],
                 "epochs": best["epochs"],
@@ -620,6 +627,7 @@ if start_button_pressed:
                 "batch_size": best["batch_size"],
                 "rmse": best["rmse"],
                 "mape": best["mape"],
+                "r2": best["r2"],
                 "duration": best["duration"],
             }
         
@@ -675,6 +683,7 @@ if start_button_pressed:
                 actual = scaler.inverse_transform(y_test_tune.reshape(-1, 1))
                 rmse = math.sqrt(mean_squared_error(actual, pred))
                 mape = mean_absolute_percentage_error(actual, pred)
+                r2 = r2_score(actual, pred)
 
                 tuning_results.append({
                     "time_step": ts,
@@ -683,6 +692,7 @@ if start_button_pressed:
                     "batch_size": bs,
                     "rmse": rmse,
                     "mape": mape,
+                    "r2": r2,
                     "model": model_temp,
                     "history": history_temp,
                     "duration": duration_temp,
@@ -693,7 +703,7 @@ if start_button_pressed:
 
         # Menyimpan model tuning terbaik ke database
         if model_option == "Latih model baru":
-            best = sorted(tuning_results, key=lambda x: x["rmse"])[0]
+            best = sorted(tuning_results, key=lambda x: x["r2"])[0]
             metadata_best = {
                 "time_step": best["time_step"],
                 "epochs": best["epochs"],
@@ -701,6 +711,7 @@ if start_button_pressed:
                 "batch_size": best["batch_size"],
                 "rmse": best["rmse"],
                 "mape": best["mape"],
+                "r2": best["r2"],
                 "duration": best["duration"],
             }
             files_deleted = delete_old_model(freq, ticker, actual_start_date, actual_end_date, model_type="best tuning")
@@ -711,8 +722,8 @@ if start_button_pressed:
 
         # Menampilkan informasi model terbaik
         st.markdown("#### 4.5 Best Model Selection")
-        st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Pemilihan dilakukan kepada satu model terbaik berdasarkan hasil evaluasi paling akurat (nilai RMSE terendah) dari semua model yang dicoba selama tuning.</div>""", unsafe_allow_html=True)
-        st.success(f"Model terbaik menggunakan parameter time step = {best['time_step']}, epoch = {best['epochs']}, dan batch size = {best['batch_size']} dengan metrik evaluasi RMSE sebesar {best['rmse']:.4f} dan MAPE sebesar {best['mape']:.2%}")
+        st.markdown(f"""<div style='text-align: justify; margin-bottom: 10px'>Pemilihan dilakukan kepada satu model terbaik berdasarkan hasil akurasi tertinggi (nilai R² tertinggi) dari semua model yang dicoba selama tuning.</div>""", unsafe_allow_html=True)
+        st.success(f"Model terbaik menggunakan parameter time step = {best['time_step']}, epoch = {best['epochs']}, dan batch size = {best['batch_size']} dengan metrik evaluasi RMSE sebesar {best['rmse']:.4f}, MAPE sebesar {best['mape']:.2%}, dan R² sebesar {best['r2']:.2%}")
         best_model = best["model"]
         best_history = best["history"]
         best_time_step = best["time_step"]
@@ -777,7 +788,7 @@ if start_button_pressed:
 
         plot_dates_best = df["Date"].iloc[best["time_step"] + len(y_train_best_model):]
 
-        df_best_result, rmse_best, mape_best = show_prediction_results(
+        df_best_result, rmse_best, mape_best, r2_best = show_prediction_results(
             y_true_rescaled=y_test_best_model_rescaled,
             y_pred_rescaled=y_pred_best_rescaled,
             plot_dates=plot_dates_best,
@@ -792,6 +803,7 @@ if start_button_pressed:
                 Menampilkan hasil evaluasi model baseline dalam bentuk tabel. Terdapat metrik RMSE
                 di mana semakin kecil nilainya maka semakin akurat prediksi. Adapun metrik MAPE
                 dengan persentase kesalahan rata-rata yang semakin kecil nilainya maka semakin baik.
+                Metrik R² menilai akurasi yang diolah dalam pemrosesan algoritma LSTM tersebut.
             </div>
             """,
             unsafe_allow_html=True
@@ -804,9 +816,10 @@ if start_button_pressed:
             "Batch Size": best["batch_size"],
             "RMSE": round(rmse_best, 4),
             "MAPE (%)": round(mape_best * 100, 2),
+            "R² (%)": round(r2_best * 100, 2),
             "Durasi (detik)": round(best['duration'], 2)
         }])
-        best_tuning_table = (best_tuning_table.style.format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
+        best_tuning_table = (best_tuning_table.style.format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "R² (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
         st.dataframe(best_tuning_table)
 
     st.divider()
@@ -822,6 +835,7 @@ if start_button_pressed:
             Menampilkan hasil evaluasi model final dalam bentuk tabel. Terdapat metrik RMSE
             di mana semakin kecil nilainya maka semakin akurat prediksi. Adapun metrik MAPE
             dengan persentase kesalahan rata-rata yang semakin kecil nilainya maka semakin baik. 
+            Metrik R² menilai akurasi yang diolah dalam pemrosesan algoritma LSTM tersebut. 
             Warna latar baris biru dan hijau pada baris tabel masing-masing menandakan model 
             baseline dan best tuning. Apabila hanya terdapat warna latar baris hijau saja 
             maka model tersebut termasuk model baseline dan terbaik.
@@ -841,11 +855,12 @@ if start_button_pressed:
             "Batch Size": r["batch_size"],
             "RMSE": round(r["rmse"], 4),
             "MAPE (%)": round(r['mape'] * 100, 2),
+            "R² (%)": round(r['r2'] * 100, 2),
             "Durasi (detik)": round(r['duration'], 2)
         } for r in all_results])
 
-        min_rmse_value = model_table["RMSE"].min()
-        model_table = (model_table.style.apply(lambda row: highlight_rows(row, min_rmse_value), axis=1).format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
+        max_r2_value = model_table["R² (%)"].max()
+        model_table = (model_table.style.apply(lambda row: highlight_rows(row, max_r2_value), axis=1).format({"RMSE": "{:.4f}", "MAPE (%)": "{:.2f}", "R² (%)": "{:.2f}", "Durasi (detik)": "{:.2f}"}))
         st.dataframe(model_table, use_container_width=True)
     else:
         st.dataframe(baseline_table)

@@ -14,7 +14,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime
 from pandas.tseries.offsets import BDay, Week, MonthEnd
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from tensorflow.keras import Input
 from tensorflow.keras.models import Sequential, save_model, load_model
 from tensorflow.keras.layers import LSTM, Dropout, Dense
@@ -202,9 +202,9 @@ def build_and_train_model(X_train, y_train, X_test, y_test, time_step, epochs, b
 
     return model, history, duration, epochs, epochs_trained, batch_size
 
-def highlight_rows(row, min_rmse):
-    """Menentukan warna latar baris berdasarkan nilai RMSE."""
-    if float(row['RMSE']) == min_rmse:
+def highlight_rows(row, max_r2):
+    """Menentukan warna latar baris berdasarkan nilai R²."""
+    if float(row['R² (%)']) == max_r2:
         return ['background-color: #c6f6d5' for _ in row]
     elif row['Tipe Model'] in ['Baseline', 'Baseline (dari Database)']:
         return ['background-color: #d3e5ff' for _ in row]
@@ -351,8 +351,9 @@ def show_prediction_results(y_true_rescaled, y_pred_rescaled, plot_dates, title=
 
     rmse = math.sqrt(mean_squared_error(df_result["Sebenarnya"], df_result["Prediksi"]))
     mape = mean_absolute_percentage_error(df_result["Sebenarnya"], df_result["Prediksi"])
+    r2 = r2_score(df_result["Sebenarnya"], df_result["Prediksi"])
 
-    return df_result, rmse, mape
+    return df_result, rmse, mape, r2
 
 def extract_model_info(model_name):
     """Mengekstrak informasi ticker, frekuensi, tanggal, dan tipe model dari nama model."""
