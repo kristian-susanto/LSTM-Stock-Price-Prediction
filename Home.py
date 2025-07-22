@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 # Konfigurasi awal Streamlit
 st.set_page_config(page_title="Prediksi Harga Saham", page_icon="assets/favicon.ico", layout="wide")
-st.header("Analisis Prediksi Harga Saham Menggunakan Metode LSTM", divider="gray")
+st.header("Fransiscus Kristian Susanto - 40621100012", divider="gray")
 
 # Memuat konfigurasi
 load_dotenv()
