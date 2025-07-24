@@ -619,7 +619,9 @@ if start_button_pressed:
                         st.warning(f"Model best tuning atau metadata untuk '{model_name_best_tuning}' tidak ditemukan di database. Akan melakukan tuning model baru jika opsi 'Latih model baru' dipilih.")
             except Exception as e:
                 st.error(f"Gagal memuat model best tuning dari database: {e}.")
-            best = sorted(tuning_results, key=lambda x: x["r2"])[0]
+            best = sorted(tuning_results, key=lambda x: x["r2"], reverse=True)[0]
+            # atau
+            # best = sorted(tuning_results, key=lambda x: x["r2"])[-1]
             metadata_best = {
                 "time_step": best["time_step"],
                 "epochs": best["epochs"],
@@ -703,7 +705,9 @@ if start_button_pressed:
 
         # Menyimpan model tuning terbaik ke database
         if model_option == "Latih model baru":
-            best = sorted(tuning_results, key=lambda x: x["r2"])[0]
+            best = sorted(tuning_results, key=lambda x: x["r2"], reverse=True)[0]
+            # atau
+            # best = sorted(tuning_results, key=lambda x: x["r2"])[-1]
             metadata_best = {
                 "time_step": best["time_step"],
                 "epochs": best["epochs"],

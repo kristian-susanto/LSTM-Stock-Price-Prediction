@@ -302,13 +302,13 @@ def model_architecture_summary(model):
     for row in table_data:
         clean_row = row.replace("│", "").replace("─", "").replace("└", "").replace("┌", "").replace("┐", "").replace("┘", "")
         parts = [part.strip() for part in clean_row.strip().split("  ") if part.strip()]
-        
+
         if len(parts) >= 3:
             layer_type = parts[0]
             output_shape = parts[1]
             param_count = parts[2]
             parsed_rows.append((layer_type, output_shape, param_count))
-    
+
     df_model_summary = pd.DataFrame(parsed_rows, columns=["Layer (type)", "Output Shape", "Param #"])
     st.write(df_model_summary)
 

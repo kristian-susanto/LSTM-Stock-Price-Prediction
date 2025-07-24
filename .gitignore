@@ -1,4 +1,5 @@
 .devcontainer
+data-skripsi
 utils/__pycache__
 venv
 .env
