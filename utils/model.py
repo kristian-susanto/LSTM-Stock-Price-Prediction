@@ -14,7 +14,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime
 from pandas.tseries.offsets import BDay, Week, MonthEnd
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score, accuracy_score
 from tensorflow.keras import Input
 from tensorflow.keras.models import Sequential, save_model, load_model
 from tensorflow.keras.layers import LSTM, Dropout, Dense
@@ -352,6 +352,15 @@ def show_prediction_results(y_true_rescaled, y_pred_rescaled, plot_dates, title=
     rmse = math.sqrt(mean_squared_error(df_result["Sebenarnya"], df_result["Prediksi"]))
     mape = mean_absolute_percentage_error(df_result["Sebenarnya"], df_result["Prediksi"])
     r2 = r2_score(df_result["Sebenarnya"], df_result["Prediksi"])
+
+    # Membulatkan nilai prediksi dan aktual (bisa ke integer, atau logika lain sesuai kebutuhan)
+    y_true_rounded = np.round(df_result["Sebenarnya"])
+    y_pred_rounded = np.round(df_result["Prediksi"])
+
+    # Hitung akurasi klasifikasi kasar
+    accuracy = accuracy_score(y_true_rounded, y_pred_rounded)
+
+    st.markdown(f"**Akurasi (berdasarkan pembulatan):** {accuracy:.4f}")
 
     return df_result, rmse, mape, r2
 
