@@ -353,10 +353,6 @@ def show_prediction_results(y_true_rescaled, y_pred_rescaled, plot_dates, title=
     mape = mean_absolute_percentage_error(df_result["Sebenarnya"], df_result["Prediksi"])
     r2 = r2_score(df_result["Sebenarnya"], df_result["Prediksi"])
 
-    from sklearn.metrics import accuracy_score
-    accuracy = accuracy_score(y_true_rescaled.flatten(), y_pred_rescaled.flatten())
-    st.write(f"Accuracy (tidak cocok untuk regresi): {accuracy:.4f}")
-
     return df_result, rmse, mape, r2
 
 def extract_model_info(model_name):
