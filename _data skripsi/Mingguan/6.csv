@@ -1,3 +1,0 @@
-﻿,Column,Non-Null Count,Dtype
-0,Date,500 non-null,datetime64[ns]
-1,Close,500 non-null,float64

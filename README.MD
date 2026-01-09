@@ -66,6 +66,7 @@ Create a file named .env in the project root directory, then add your MongoDB co
 ```bash
 MONGO_URI="mongodb+srv://<username>:<password>@<cluster>.mongodb.net/my_app_db?retryWrites=true&w=majority"
 MONGO_DB="your_database_name"
+ADMIN_REGISTRATION_CODE="your_admin_registration_code"
 ```
 Replace <username>, <password>, and <cluster> with your MongoDB credentials and database details.
 If you are using the MongoDB Atlas service, make sure your IP address has been whitelisted and that access from external applications has been enabled.
