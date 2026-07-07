@@ -64,18 +64,15 @@ pip install numpy pandas matplotlib seaborn scikit-learn tensorflow yfinance bcr
 ### 3. .env File Configuration
 Create a file named .env in the project root directory, then add your MongoDB configuration as follows:
 ```bash
-MONGO_URI="mongodb+srv://<username>:<password>@<cluster>.mongodb.net/my_app_db?retryWrites=true&w=majority"
+MONGO_URI="mongodb+srv://<username>:<password>@<cluster-url>"
 MONGO_DB="your_database_name"
 ADMIN_REGISTRATION_CODE="your_admin_registration_code"
 ```
-Replace `<username>`, `<password>`, and `<cluster>` with your MongoDB credentials and database details.
+Replace `<username>`, `<password>`, and `<cluster-url>` with your MongoDB credentials and database details.
 If you are using the MongoDB Atlas service, make sure your IP address has been whitelisted and that access from external applications has been enabled.
 
 ### 4. Run Streamlit Application
 ```bash
 streamlit run Home.py
 ```
-The application will open in the browser automatically at the address `http://localhost:8501`.
-
-## Contributor
-- [Kristian Susanto](https://github.com/kristian-susanto)
+The application will open in the browser automatically at the address [`http://localhost:8501`](http://localhost:8501).
