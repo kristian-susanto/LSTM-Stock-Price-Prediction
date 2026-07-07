@@ -61,8 +61,8 @@ Or install manually:
 pip install numpy pandas matplotlib seaborn scikit-learn tensorflow yfinance bcrypt pymongo python-dotenv streamlit
 ```
 
-### 3. .env File Configuration
-Create a file named .env in the project root directory, then add your MongoDB configuration as follows:
+### 3. `.env` File Configuration
+Create a file named `.env` in the project root directory, then add your MongoDB configuration as follows:
 ```bash
 MONGO_URI="mongodb+srv://<username>:<password>@<cluster-url>"
 MONGO_DB="your_database_name"
